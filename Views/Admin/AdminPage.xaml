@@ -1,0 +1,28 @@
+﻿<Page x:Class="PFSoftware.TimeClock.Views.Admin.AdminPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      mc:Ignorable="d"
+      Style="{StaticResource PageStyle}"
+      Title="Time Clock - Admin">
+    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Button x:Name="BtnManageUsers" Grid.Row="1" Width="250" Content="_Manage Users" Click="BtnManageUsers_Click" Margin="0,0,0,10" />
+        <Button x:Name="BtnManageRoles" Grid.Row="2" Width="250" Content="Manage _Roles" Click="BtnManageRoles_Click"  Margin="0,0,0,10" />
+        <Button x:Name="BtnLogOutAll" Grid.Row="3" Width="250" Content="_Log Out All" Click="BtnLogOutAll_Click" Margin="0,0,0,10" />
+        <Button x:Name="BtnChangePassword" Grid.Row="4" Width="250" Content="_Change Password" Click="BtnChangePassword_Click" Margin="0,0,0,10" />
+        <Button x:Name="BtnBack" Grid.Row="5" Width="250" Content="_Back" Click="BtnBack_Click" IsCancel="True" />
+    </Grid>
+</Page>
