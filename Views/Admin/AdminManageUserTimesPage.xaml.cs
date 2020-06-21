@@ -37,7 +37,7 @@ namespace PFSoftware.TimeClock.Views.Admin
             if (_selectedShift.ShiftStart != DateTime.MinValue)
             {
                 DateIn.SelectedDate = _selectedShift.ShiftStart;
-                CmbHourIn.SelectedItem = _selectedShift.ShiftStart.Hour % 12;
+                CmbHourIn.SelectedIndex = _selectedShift.ShiftStart.Hour % 12;
                 CmbMinuteIn.SelectedItem = _selectedShift.ShiftStart.Minute;
                 CmbSecondIn.SelectedItem = _selectedShift.ShiftStart.Second;
                 CmbAMPMIn.SelectedIndex = _selectedShift.ShiftStart.Hour >= 12 ? 1 : 0;
@@ -55,7 +55,7 @@ namespace PFSoftware.TimeClock.Views.Admin
             if (_selectedShift.ShiftEnd != DateTime.MinValue)
             {
                 DateOut.SelectedDate = _selectedShift.ShiftEnd != DateTime.MinValue ? _selectedShift.ShiftEnd : _selectedShift.ShiftStart;
-                CmbHourOut.SelectedItem = _selectedShift.ShiftEnd.Hour % 12;
+                CmbHourOut.SelectedIndex = _selectedShift.ShiftEnd.Hour % 12;
                 CmbMinuteOut.SelectedItem = _selectedShift.ShiftEnd.Minute;
                 CmbSecondOut.SelectedItem = _selectedShift.ShiftEnd.Second;
                 CmbAMPMOut.SelectedIndex = _selectedShift.ShiftEnd.Hour >= 12 ? 1 : 0;
@@ -156,16 +156,16 @@ namespace PFSoftware.TimeClock.Views.Admin
             CmbHourIn.SelectedItem = DateTime.Now.Hour % 12;
             CmbMinuteIn.SelectedItem = DateTime.Now.Minute;
             CmbSecondIn.SelectedItem = DateTime.Now.Second;
-            CmbAMPMIn.SelectedIndex = _selectedShift.ShiftStart.Hour >= 12 ? 1 : 0;
+            CmbAMPMIn.SelectedIndex = DateTime.Now.Hour >= 12 ? 1 : 0;
             CmbRole.SelectedIndex = 0;
         }
 
         private async void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             DateTime dayIn = DateTimeHelper.Parse(DateIn.SelectedDate);
-            DateTime timeIn = new DateTime(dayIn.Year, dayIn.Month, dayIn.Day, CmbAMPMIn.SelectedItem.ToString() == "AM" ? Int32Helper.Parse(CmbHourIn.SelectedItem) : Int32Helper.Parse(CmbHourIn.SelectedItem) + 12, Int32Helper.Parse(CmbMinuteIn.SelectedItem), Int32Helper.Parse(CmbSecondIn.SelectedItem));
+            DateTime timeIn = new DateTime(dayIn.Year, dayIn.Month, dayIn.Day, CmbAMPMIn.Text == "AM" ? CmbHourIn.SelectedIndex : CmbHourIn.SelectedIndex + 12, Int32Helper.Parse(CmbMinuteIn.SelectedItem), Int32Helper.Parse(CmbSecondIn.SelectedItem));
             DateTime dayOut = DateTimeHelper.Parse(DateOut.SelectedDate);
-            DateTime timeOut = CmbHourOut.SelectedIndex >= 0 ? new DateTime(dayOut.Year, dayOut.Month, dayOut.Day, CmbAMPMOut.SelectedItem.ToString() == "AM" ? Int32Helper.Parse(CmbHourOut.SelectedItem) : Int32Helper.Parse(CmbHourOut.SelectedItem) + 12, Int32Helper.Parse(CmbMinuteOut.SelectedItem), Int32Helper.Parse(CmbSecondOut.SelectedItem)) : DateTime.MinValue;
+            DateTime timeOut = CmbHourOut.SelectedIndex >= 0 ? new DateTime(dayOut.Year, dayOut.Month, dayOut.Day, CmbAMPMOut.Text == "AM" ? CmbHourOut.SelectedIndex : CmbHourOut.SelectedIndex + 12, Int32Helper.Parse(CmbMinuteOut.SelectedItem), Int32Helper.Parse(CmbSecondOut.SelectedItem)) : DateTime.MinValue;
             Shift newShift = new Shift(AppState.CurrentUser.ID, CmbRole.SelectedItem.ToString(), timeIn, timeOut, true);
 
             if (!_newTime)
@@ -173,7 +173,7 @@ namespace PFSoftware.TimeClock.Views.Admin
             else
                 await AppState.AddShift(newShift).ConfigureAwait(false);
 
-            AppState.CurrentUser.LoggedIn = AppState.CurrentUser.GetMostRecentShift().ShiftEnd != DateTime.MinValue;
+            AppState.CurrentUser.LoggedIn = AppState.CurrentUser.GetMostRecentShift().ShiftEnd == DateTime.MinValue;
             Dispatcher.Invoke(() =>
             {
                 Clear();

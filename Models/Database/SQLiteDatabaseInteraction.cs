@@ -69,6 +69,8 @@ namespace PFSoftware.TimeClock.Models.Database
         /// <returns>True if successful</returns>
         public async Task<bool> DeleteRole(string deleteRole)
         {
+            //TODO Deleting Roles requires each User with that Role have at least one additional Role. The last Role for the entire system cannot be deleted. If a User has no other Roles, one must be assigned to them. A popup will handle that.
+
             SQLiteCommand cmd = new SQLiteCommand { CommandText = "DELETE FROM Roles WHERE [Name] = @deleteRole; UPDATE Users SET Roles = REPLACE(Roles, @deleteRole, '') " };
             cmd.Parameters.AddWithValue("@deleteRole", deleteRole);
 
@@ -232,7 +234,6 @@ namespace PFSoftware.TimeClock.Models.Database
             if (ds.Tables[0].Rows.Count > 0)
                 loadUser = await LoadUserFromDataRow(ds.Tables[0].Rows[0]).ConfigureAwait(false);
 
-            //TODO Figure out deleting Roles. Should a Role be allowed to be deleted if there are Users with that Role?
             return loadUser;
         }
 
