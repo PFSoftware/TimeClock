@@ -4,7 +4,6 @@ using PFSoftware.TimeClock.Models.Entities;
 using PFSoftware.TimeClock.Views.SharedPages;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
@@ -12,17 +11,9 @@ using System.Windows.Threading;
 namespace PFSoftware.TimeClock.Views.Users
 {
     /// <summary>Interaction logic for PFSoftware.TimeClockPage.xaml</summary>
-    public partial class TimeClockPage : INotifyPropertyChanged
+    public partial class TimeClockPage
     {
         private readonly DispatcherTimer _timer = new DispatcherTimer();
-
-        #region Data-Binding
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void NotifyPropertyChanged(string property) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
-
-        #endregion Data-Binding
 
         /// <summary>Checks information regarding the In/Out button.</summary>
         private void CheckButton()

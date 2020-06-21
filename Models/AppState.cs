@@ -5,6 +5,7 @@ using PFSoftware.TimeClock.Models.Entities;
 using PFSoftware.TimeClock.Views;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,6 +16,7 @@ namespace PFSoftware.TimeClock.Models
     internal static class AppState
     {
         internal static User CurrentUser = new User();
+        internal static List<User> AllUsers = new List<User>();
         internal static List<string> AllRoles = new List<string>();
         private static readonly SQLiteDatabaseInteraction DatabaseInteraction = new SQLiteDatabaseInteraction();
 
@@ -110,6 +112,7 @@ namespace PFSoftware.TimeClock.Models
             FileManagement();
             AdminPassword = await DatabaseInteraction.LoadAdminPassword().ConfigureAwait(false);
             AllRoles = new List<string>(await DatabaseInteraction.LoadRoles().ConfigureAwait(false));
+            AllUsers = await LoadUsers().ConfigureAwait(false);
         }
 
         /// <summary>Loads a User from the database.</summary>
@@ -133,6 +136,27 @@ namespace PFSoftware.TimeClock.Models
         internal static async Task<bool> LogOut(Shift logOutShift) => await DatabaseInteraction.LogOut(logOutShift).ConfigureAwait(false);
 
         #endregion Log In/Out
+
+        #region Admin Time Clock Methods
+
+        /// <summary>Administrator function which adds a <see cref="Shift"/> to the <see cref="User"/>'s <see cref="Shift"/>s.</summary>
+        /// <param name="newShift"><see cref="Shift"/> to be added</param>
+        internal static async Task AddShift(Shift newShift)
+        {
+            if (await DatabaseInteraction.AddShift(newShift))
+                CurrentUser.AddShift(newShift);
+        }
+
+        /// <summary>Administrator function which modifies a <see cref="Shift"/> in <see cref="User"/>'s <see cref="Shift"/>s.</summary>
+        /// <param name="oldShift"><see cref="Shift"/> to be replaced</param>
+        /// <param name="newShift"><see cref="Shift"/> to be replace old <see cref="Shift"/></param>
+        internal static async Task ModifyShift(Shift oldShift, Shift newShift)
+        {
+            if (await DatabaseInteraction.ModifyShift(oldShift, newShift))
+                CurrentUser.ModifyShift(oldShift, newShift);
+        }
+
+        #endregion Admin Time Clock Methods
 
         #region Notification Management
 

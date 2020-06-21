@@ -38,8 +38,6 @@ namespace PFSoftware.TimeClock.Views.Admin
             AppState.GoBack();
             if (_admin)
                 AppState.Navigate(new AdminPage());
-            else
-                AppState.MainWindow.MnuAdmin.IsEnabled = true;
         }
 
         public AdminPasswordPage()

@@ -9,6 +9,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PFSoftware.TimeClock.Models.Database
@@ -23,7 +24,7 @@ namespace PFSoftware.TimeClock.Models.Database
         /// <summary>Verifies that the requested database exists and that its file size is greater than zero. If not, it extracts the embedded database file to the local output folder.</summary>
         /// <returns>Returns true once the database has been validated</returns>
         public void VerifyDatabaseIntegrity() => Functions.VerifyFileIntegrity(Assembly.GetExecutingAssembly()
-            .GetManifestResourceStream($"TimeClock.{_DATABASENAME}"), _DATABASENAME, AppData.Location);
+            .GetManifestResourceStream($"PFSoftware.TimeClock.{_DATABASENAME}"), _DATABASENAME, AppData.Location);
 
         #region Administrator Management
 
@@ -88,6 +89,44 @@ namespace PFSoftware.TimeClock.Models.Database
         }
 
         #endregion Role Management
+
+        #region Time Clock Adjustment
+
+        /// <summary>Administrator function which adds a <see cref="Shift"/> to the <see cref="User"/>'s <see cref="Shift"/>s.</summary>
+        /// <param name="newShift"><see cref="Shift"/> to be added</param>
+        public async Task<bool> AddShift(Shift newShift)
+        {
+            SQLiteCommand cmd = new SQLiteCommand { CommandText = "INSERT INTO Times([ID],[Role],[TimeIn],[TimeOut],[Edited])VALUES(@id,@role,@timeIn,@timeOut,@edited); UPDATE Users SET [LoggedIn] = @loggedIn WHERE [ID] = @id" };
+            cmd.Parameters.AddWithValue("@id", newShift.ID);
+            cmd.Parameters.AddWithValue("@role", newShift.Role);
+            cmd.Parameters.AddWithValue("@timeIn", newShift.ShiftStartToString);
+            cmd.Parameters.AddWithValue("@timeOut", newShift.ShiftEndToString);
+            cmd.Parameters.AddWithValue("@edited", newShift.Edited);
+            cmd.Parameters.AddWithValue("@loggedIn", AppState.CurrentUser.LoggedIn);
+
+            return await SQLiteHelper.ExecuteCommand(_con, cmd).ConfigureAwait(false);
+        }
+
+        /// <summary>Modifies a <see cref="Shift"/> in <see cref="User"/>'s <see cref="Shift"/>s.</summary>
+        /// <param name="oldShift"><see cref="Shift"/> to be replaced</param>
+        /// <param name="newShift"><see cref="Shift"/> to be replace old <see cref="Shift"/></param>
+        public async Task<bool> ModifyShift(Shift oldShift, Shift newShift)
+        {
+            SQLiteCommand cmd = new SQLiteCommand
+            {
+                CommandText = "UPDATE Times SET [Role] = @role, [TimeIn] = @timeIn, [TimeOut] = @timeOut, [Edited] = @edited WHERE [ID] = @id AND [TimeIn] = @oldTimeIn"
+            };
+            cmd.Parameters.AddWithValue("@role", newShift.Role);
+            cmd.Parameters.AddWithValue("@timeIn", newShift.ShiftStartToString);
+            cmd.Parameters.AddWithValue("@timeOut", newShift.ShiftEndToString);
+            cmd.Parameters.AddWithValue("@edited", newShift.Edited);
+            cmd.Parameters.AddWithValue("@id", AppState.CurrentUser.ID);
+            cmd.Parameters.AddWithValue("@oldTimeIn", oldShift.ShiftStartToString);
+
+            return await SQLiteHelper.ExecuteCommand(_con, cmd).ConfigureAwait(false);
+        }
+
+        #endregion Time Clock Adjustment
 
         #endregion Administrator Management
 

@@ -26,7 +26,7 @@ namespace PFSoftware.TimeClock.Views.Admin
             _availableRoles.Clear();
             _availableRoles = new List<string>(AppState.AllRoles);
             _assignedRoles.Clear();
-            _assignedRoles = new List<string>(PreviousPage.SelectedUser.Roles);
+            _assignedRoles = new List<string>(AppState.CurrentUser.Roles);
 
             foreach (string role in _assignedRoles)
                 _availableRoles.Remove(role);
@@ -43,13 +43,13 @@ namespace PFSoftware.TimeClock.Views.Admin
 
         private void BtnAssign_Click(object sender, RoutedEventArgs e)
         {
-            PreviousPage.SelectedUser.AddRole(LstAvailable.SelectedItem.ToString());
+            AppState.CurrentUser.AddRole(LstAvailable.SelectedItem.ToString());
             UpdateBindings();
         }
 
         private void BtnUnassign_Click(object sender, RoutedEventArgs e)
         {
-            PreviousPage.SelectedUser.RemoveRole(LstAssigned.SelectedItem.ToString());
+            AppState.CurrentUser.RemoveRole(LstAssigned.SelectedItem.ToString());
             UpdateBindings();
         }
 

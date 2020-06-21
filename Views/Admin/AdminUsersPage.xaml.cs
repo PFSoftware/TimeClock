@@ -4,7 +4,6 @@ using PFSoftware.TimeClock.Models;
 using PFSoftware.TimeClock.Models.Entities;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -16,18 +15,14 @@ namespace PFSoftware.TimeClock.Views.Admin
         internal List<User> AllUsers = new List<User>();
         internal AdminPage PreviousPage { get; set; }
         private ListViewSort _sort = new ListViewSort();
-        private User _selectedUser = new User();
         private List<User> _allUsers = new List<User>();
 
         /// <summary>Refreshes the LVUsers's ItemSource.</summary>
-        internal async Task RefreshItemsSource()
+        internal void RefreshItemsSource()
         {
-            _allUsers = await AppState.LoadUsers().ConfigureAwait(false);
-            Dispatcher.Invoke(() =>
-           {
-               LVUsers.ItemsSource = _allUsers;
-               LVUsers.Items.Refresh();
-           });
+            _allUsers = AppState.AllUsers;
+            LVUsers.ItemsSource = _allUsers;
+            LVUsers.Items.Refresh();
         }
 
         /// <summary>Toggles the buttons.</summary>
@@ -46,34 +41,32 @@ namespace PFSoftware.TimeClock.Views.Admin
         private async void BtnDeleteUser_Click(object sender, RoutedEventArgs e)
         {
             string message = "Are you sure you want to delete this User?";
-            if (_selectedUser.Shifts.Any())
-                message += $" You will also be deleting their {_selectedUser.Shifts.Count()} shifts.";
+            if (AppState.CurrentUser.Shifts.Any())
+                message += $" You will also be deleting their {AppState.CurrentUser.Shifts.Count()} shifts.";
             message += " This action cannot be undone.";
             if (AppState.YesNoNotification(message, "Time Clock"))
             {
-                await AppState.DeleteUser(_selectedUser).ConfigureAwait(false);
-                await RefreshItemsSource().ConfigureAwait(false);
+                await AppState.DeleteUser(AppState.CurrentUser).ConfigureAwait(false);
+                RefreshItemsSource();
             }
         }
 
-        private void BtnModifyTimes_Click(object sender, RoutedEventArgs e)
-        {
-        }
+        private void BtnModifyTimes_Click(object sender, RoutedEventArgs e) => AppState.Navigate(new AdminManageUserTimesPage());
 
         private void BtnModifyUser_Click(object sender, RoutedEventArgs e)
         {
-            AdminManageUserPage manageUserPage = new AdminManageUserPage { OriginalUser = _selectedUser, SelectedUser = new User(_selectedUser) };
+            AdminManageUserPage manageUserPage = new AdminManageUserPage { OriginalUser = new User(AppState.CurrentUser) };
             AppState.Navigate(manageUserPage);
             manageUserPage.Reset();
         }
 
-        private void BtnNewUser_Click(object sender, RoutedEventArgs e) => AppState.Navigate(new AdminManageUserPage { OriginalUser = new User(), SelectedUser = new User() });
+        private void BtnNewUser_Click(object sender, RoutedEventArgs e) => AppState.Navigate(new AdminManageUserPage { OriginalUser = new User() });
 
         private void LVUsersColumnHeader_Click(object sender, RoutedEventArgs e) => _sort = Functions.ListViewColumnHeaderClick(sender, _sort, LVUsers, "#CCCCCC");
 
         private void LVUsers_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            _selectedUser = LVUsers.SelectedIndex >= 0 ? (User)LVUsers.SelectedItem : new User();
+            AppState.CurrentUser = LVUsers.SelectedIndex >= 0 ? (User)LVUsers.SelectedItem : new User();
             ToggleButtons(LVUsers.SelectedIndex >= 0);
         }
 
@@ -86,7 +79,7 @@ namespace PFSoftware.TimeClock.Views.Admin
 
         public AdminUsersPage() => InitializeComponent();
 
-        private async void AdminUsersPage_OnLoaded(object sender, RoutedEventArgs e) => await RefreshItemsSource().ConfigureAwait(false);
+        private void AdminUsersPage_OnLoaded(object sender, RoutedEventArgs e) => RefreshItemsSource();
 
         #endregion Page-Manipulation Methods
     }

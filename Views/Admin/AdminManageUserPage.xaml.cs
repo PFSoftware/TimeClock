@@ -17,20 +17,17 @@ namespace PFSoftware.TimeClock.Views.Admin
         /// <summary>The original <see cref="User"/>, if applicable.</summary>
         internal User OriginalUser { get; set; }
 
-        /// <summary>The <see cref="User"/> currently being modified.</summary>
-        internal User SelectedUser { get; set; }
-
         /// <summary>Determines if buttons should be enabled.</summary>
         internal void CheckInput()
         {
             bool enabled = TxtUsername.Text.Length > 0
                 && TxtFirstName.Text.Length > 0
                 && TxtLastName.Text.Length > 0
-                || TxtUsername.Text != SelectedUser.Username
-                || TxtFirstName.Text != SelectedUser.FirstName
-                || TxtLastName.Text != SelectedUser.LastName
+                || TxtUsername.Text != AppState.CurrentUser.Username
+                || TxtFirstName.Text != AppState.CurrentUser.FirstName
+                || TxtLastName.Text != AppState.CurrentUser.LastName
                 || (PswdPassword.Password.Length > 0 && PswdConfirm.Password.Length > 0)
-                && !OriginalUser.Roles.Except(SelectedUser.Roles).Any();
+                && !OriginalUser.Roles.Except(AppState.CurrentUser.Roles).Any();
             BtnSubmit.IsEnabled = enabled;
             BtnReset.IsEnabled = enabled;
         }
@@ -41,7 +38,7 @@ namespace PFSoftware.TimeClock.Views.Admin
             TxtUsername.Text = OriginalUser.Username;
             TxtFirstName.Text = OriginalUser.FirstName;
             TxtLastName.Text = OriginalUser.LastName;
-            SelectedUser = new User(OriginalUser);
+            AppState.CurrentUser = new User(OriginalUser);
             PswdPassword.Password = "";
             PswdConfirm.Password = "";
             TxtUsername.Focus();
@@ -59,14 +56,14 @@ namespace PFSoftware.TimeClock.Views.Admin
                 {
                     Dispatcher.Invoke(() =>
                     {
-                        SelectedUser.Username = TxtUsername.Text.Trim();
-                        SelectedUser.FirstName = TxtFirstName.Text.Trim();
-                        SelectedUser.LastName = TxtLastName.Text.Trim();
-                        SelectedUser.Password = PBKDF2.HashPassword(PswdPassword.Password.Trim());
+                        AppState.CurrentUser.Username = TxtUsername.Text.Trim();
+                        AppState.CurrentUser.FirstName = TxtFirstName.Text.Trim();
+                        AppState.CurrentUser.LastName = TxtLastName.Text.Trim();
+                        AppState.CurrentUser.Password = PBKDF2.HashPassword(PswdPassword.Password.Trim());
                     });
-                    if (SelectedUser.Roles.ToList().Count > 0)
+                    if (AppState.CurrentUser.Roles.ToList().Count > 0)
                     {
-                        if (await AppState.NewUser(SelectedUser).ConfigureAwait(false))
+                        if (await AppState.NewUser(AppState.CurrentUser).ConfigureAwait(false))
                             Dispatcher.Invoke(() => AppState.GoBack());
                     }
                     else
@@ -82,16 +79,16 @@ namespace PFSoftware.TimeClock.Views.Admin
         /// <summary>Modifies a <see cref="User"/> in the database.</summary>
         private async Task ModifyUser()
         {
-            SelectedUser.Username = TxtUsername.Text.Trim();
-            SelectedUser.FirstName = TxtFirstName.Text.Trim();
-            SelectedUser.LastName = TxtLastName.Text.Trim();
-            SelectedUser.Password = PswdPassword.Password.Length >= 4 ? PBKDF2.HashPassword(PswdPassword.Password.Trim()) : SelectedUser.Password;
+            AppState.CurrentUser.Username = TxtUsername.Text.Trim();
+            AppState.CurrentUser.FirstName = TxtFirstName.Text.Trim();
+            AppState.CurrentUser.LastName = TxtLastName.Text.Trim();
+            AppState.CurrentUser.Password = PswdPassword.Password.Length >= 4 ? PBKDF2.HashPassword(PswdPassword.Password.Trim()) : AppState.CurrentUser.Password;
 
-            if (SelectedUser != OriginalUser)
+            if (AppState.CurrentUser != OriginalUser)
             {
-                if (SelectedUser.Roles.ToList().Count > 0)
+                if (AppState.CurrentUser.Roles.ToList().Count > 0)
                 {
-                    if (await AppState.ChangeUserDetails(OriginalUser, SelectedUser).ConfigureAwait(false))
+                    if (await AppState.ChangeUserDetails(OriginalUser, AppState.CurrentUser).ConfigureAwait(false))
                         Dispatcher.Invoke(() => AppState.GoBack());
                 }
                 else

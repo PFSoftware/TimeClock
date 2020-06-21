@@ -1,25 +1,13 @@
 ﻿using PFSoftware.Extensions;
 using PFSoftware.Extensions.ListViewHelp;
 using PFSoftware.TimeClock.Models;
-using System.ComponentModel;
 using System.Windows;
 
 namespace PFSoftware.TimeClock.Views.Users
 {
     /// <summary>Interaction logic for UserLogPage.xaml</summary>
-    public partial class UserLogPage : INotifyPropertyChanged
+    public partial class UserLogPage
     {
-        #region Data-Binding
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void NotifyPropertyChanged(string property)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
-        }
-
-        #endregion Data-Binding
-
         private ListViewSort _sort = new ListViewSort();
 
         #region Click Methods
