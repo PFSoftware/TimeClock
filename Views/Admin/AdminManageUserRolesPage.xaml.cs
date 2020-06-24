@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using TimeClock.Models.Entities;
 
 namespace PFSoftware.TimeClock.Views.Admin
 {
@@ -11,8 +12,8 @@ namespace PFSoftware.TimeClock.Views.Admin
     {
         internal AdminManageUserPage PreviousPage { get; set; }
 
-        private List<string> _availableRoles = new List<string>();
-        private List<string> _assignedRoles = new List<string>();
+        private List<Role> _availableRoles = new List<Role>();
+        private List<Role> _assignedRoles = new List<Role>();
 
         #region Data-Binding
 
@@ -24,11 +25,11 @@ namespace PFSoftware.TimeClock.Views.Admin
         private void UpdateBindings()
         {
             _availableRoles.Clear();
-            _availableRoles = new List<string>(AppState.AllRoles);
+            _availableRoles = new List<Role>(AppState.AllRoles);
             _assignedRoles.Clear();
-            _assignedRoles = new List<string>(AppState.CurrentUser.Roles);
+            _assignedRoles = new List<Role>(AppState.CurrentUser.Roles);
 
-            foreach (string role in _assignedRoles)
+            foreach (Role role in _assignedRoles)
                 _availableRoles.Remove(role);
 
             LstAvailable.ItemsSource = _availableRoles;
@@ -43,13 +44,13 @@ namespace PFSoftware.TimeClock.Views.Admin
 
         private void BtnAssign_Click(object sender, RoutedEventArgs e)
         {
-            AppState.CurrentUser.AddRole(LstAvailable.SelectedItem.ToString());
+            AppState.CurrentUser.AddRole((Role)LstAvailable.SelectedItem);
             UpdateBindings();
         }
 
         private void BtnUnassign_Click(object sender, RoutedEventArgs e)
         {
-            AppState.CurrentUser.RemoveRole(LstAssigned.SelectedItem.ToString());
+            AppState.CurrentUser.RemoveRole((Role)LstAssigned.SelectedItem);
             UpdateBindings();
         }
 

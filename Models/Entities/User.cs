@@ -4,24 +4,24 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using TimeClock.Models.Entities;
 
 namespace PFSoftware.TimeClock.Models.Entities
 {
     /// <summary>Represents someone who uses the Time Clock.</summary>
     internal class User : BaseINPC
     {
-        private int _id;
-        private string _username, _firstName, _lastName, _password;
+        private string _id, _username, _firstName, _lastName, _password;
         private readonly string format = @"hh\:mm\:ss";
         private readonly CultureInfo culture = new CultureInfo("en-US");
         private bool _loggedIn;
-        private List<string> _roles = new List<string>();
+        private List<Role> _roles = new List<Role>();
         private List<Shift> _shifts = new List<Shift>();
 
         #region Modifying Properties
 
         /// <summary><see cref="User"/>'s ID</summary>
-        public int ID
+        public string ID
         {
             get => _id;
             set { _id = value; NotifyPropertyChanged(nameof(ID)); }
@@ -63,7 +63,7 @@ namespace PFSoftware.TimeClock.Models.Entities
         }
 
         /// <summary>List of roles a <see cref="User"/> has available.</summary>
-        public IEnumerable<string> Roles => _roles;
+        public IEnumerable<Role> Roles => _roles;
 
         /// <summary><see cref="Shift"/>s worked by <see cref="User"/>.</summary>
         public IEnumerable<Shift> Shifts => _shifts;
@@ -160,7 +160,7 @@ namespace PFSoftware.TimeClock.Models.Entities
 
         /// <summary>Adds a role to a <see cref="User"/>.</summary>
         /// <param name="role">Role to be added</param>
-        internal void AddRole(string role)
+        internal void AddRole(Role role)
         {
             _roles.Add(role);
             UpdateRoles();
@@ -169,7 +169,7 @@ namespace PFSoftware.TimeClock.Models.Entities
         /// <summary>Modifies a <see cref="User"/>'s role.</summary>
         /// <param name="oldRole">Role to be modified</param>
         /// <param name="newRole">Role to replace old role</param>
-        internal void ModifyRole(string oldRole, string newRole)
+        internal void ModifyRole(Role oldRole, Role newRole)
         {
             _roles.Replace(oldRole, newRole);
             UpdateRoles();
@@ -177,7 +177,7 @@ namespace PFSoftware.TimeClock.Models.Entities
 
         /// <summary>Removes a role from a <see cref="User"/>.</summary>
         /// <param name="role"></param>
-        internal void RemoveRole(string role)
+        internal void RemoveRole(Role role)
         {
             _roles.Remove(role);
             UpdateRoles();
@@ -253,7 +253,7 @@ namespace PFSoftware.TimeClock.Models.Entities
         /// <param name="loggedIn">Is the <see cref="User"/> logged in?</param>
         /// <param name="roles">List of roles a <see cref="User"/> has available.</param>
         /// <param name="shifts"><see cref="Shift"/>s worked by the <see cref="User"/></param>
-        internal User(int id, string username, string firstName, string lastName, string password, bool loggedIn, IEnumerable<string> roles, IEnumerable<Shift> shifts)
+        internal User(string id, string username, string firstName, string lastName, string password, bool loggedIn, IEnumerable<Role> roles, IEnumerable<Shift> shifts)
         {
             ID = id;
             Username = username;
@@ -262,7 +262,7 @@ namespace PFSoftware.TimeClock.Models.Entities
             Password = password;
             LoggedIn = loggedIn;
 
-            List<string> allRoles = new List<string>();
+            List<Role> allRoles = new List<Role>();
             allRoles.AddRange(roles);
             _roles = allRoles;
 

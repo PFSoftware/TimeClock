@@ -1,6 +1,7 @@
 ﻿namespace TimeClock.Models.Entities
 {
-    internal enum PayPeriod
+    /// <summary>Represents how frequently a <see cref="Role"/> is paid.</summary>
+    public enum PayPeriod
     {
         Weekly,
         Biweekly,

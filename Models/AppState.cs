@@ -5,10 +5,10 @@ using PFSoftware.TimeClock.Models.Entities;
 using PFSoftware.TimeClock.Views;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using TimeClock.Models.Entities;
 
 namespace PFSoftware.TimeClock.Models
 {
@@ -17,7 +17,7 @@ namespace PFSoftware.TimeClock.Models
     {
         internal static User CurrentUser = new User();
         internal static List<User> AllUsers = new List<User>();
-        internal static List<string> AllRoles = new List<string>();
+        internal static List<Role> AllRoles = new List<Role>();
         private static readonly SQLiteDatabaseInteraction DatabaseInteraction = new SQLiteDatabaseInteraction();
 
         #region Navigation
@@ -60,7 +60,7 @@ namespace PFSoftware.TimeClock.Models
         /// <summary>Adds a Role to the database.</summary>
         /// <param name="newRole">Role to be added</param>
         /// <returns>True if successful</returns>
-        internal static async Task<bool> AddNewRole(string newRole)
+        internal static async Task<bool> AddNewRole(Role newRole)
         {
             AllRoles.Add(newRole);
             AllRoles.Sort();
@@ -70,7 +70,7 @@ namespace PFSoftware.TimeClock.Models
         /// <summary>Deletes a Role from the database.</summary>
         /// <param name="deleteRole">Role to be deleted</param>
         /// <returns>True if successful</returns>
-        internal static async Task<bool> DeleteRole(string deleteRole)
+        internal static async Task<bool> DeleteRole(Role deleteRole)
         {
             AllRoles.Remove(deleteRole);
             return await DatabaseInteraction.DeleteRole(deleteRole).ConfigureAwait(false);
@@ -80,7 +80,7 @@ namespace PFSoftware.TimeClock.Models
         /// <param name="originalRole">Original Role</param>
         /// <param name="modifyRole">Modified Role</param>
         /// <returns>True if successful</returns>
-        internal static async Task<bool> ModifyRole(string originalRole, string modifyRole)
+        internal static async Task<bool> ModifyRole(Role originalRole, Role modifyRole)
         {
             AppState.AllRoles.Remove(originalRole);
             AppState.AllRoles.Add(modifyRole);
@@ -111,7 +111,7 @@ namespace PFSoftware.TimeClock.Models
         {
             FileManagement();
             AdminPassword = await DatabaseInteraction.LoadAdminPassword().ConfigureAwait(false);
-            AllRoles = new List<string>(await DatabaseInteraction.LoadRoles().ConfigureAwait(false));
+            AllRoles = new List<Role>(await DatabaseInteraction.LoadRoles().ConfigureAwait(false));
             AllUsers = await LoadUsers().ConfigureAwait(false);
         }
 

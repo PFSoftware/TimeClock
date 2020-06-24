@@ -1,6 +1,7 @@
 ﻿using PFSoftware.TimeClock.Models.Entities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TimeClock.Models.Entities;
 
 namespace PFSoftware.TimeClock.Models.Database
 {
@@ -21,18 +22,18 @@ namespace PFSoftware.TimeClock.Models.Database
         /// <summary>Adds a Role to the database.</summary>
         /// <param name="newRole">Role to be added</param>
         /// <returns>True if successful</returns>
-        Task<bool> AddNewRole(string newRole);
+        Task<bool> AddNewRole(Role newRole);
 
         /// <summary>Deletes a Role from the database.</summary>
         /// <param name="deleteRole">Role to be deleted</param>
         /// <returns>True if successful</returns>
-        Task<bool> DeleteRole(string deleteRole);
+        Task<bool> DeleteRole(Role deleteRole);
 
         /// <summary>Modifies a Role in the database.</summary>
         /// <param name="originalRole">Original Role</param>
         /// <param name="modifyRole">Modified Role</param>
         /// <returns>True if successful</returns>
-        Task<bool> ModifyRole(string originalRole, string modifyRole);
+        Task<bool> ModifyRole(Role originalRole, Role modifyRole);
 
         #endregion Role Management
 
@@ -66,12 +67,12 @@ namespace PFSoftware.TimeClock.Models.Database
 
         /// <summary>Loads all Roles from the database.</summary>
         /// <returns>Returns the list of Roles</returns>
-        Task<List<string>> LoadRoles();
+        Task<List<Role>> LoadRoles();
 
         /// <summary>Loads all the selected User's Shifts from the database.</summary>
         /// <param name="userID"></param>
         /// <returns>Returns the list of Shifts</returns>
-        Task<List<Shift>> LoadShifts(int userID);
+        Task<List<Shift>> LoadShifts(string userID);
 
         /// <summary>Loads a User from the database.</summary>
         /// <returns>User</returns>

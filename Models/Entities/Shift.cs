@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PFSoftware.Extensions;
+using System;
 using System.Globalization;
 
 namespace PFSoftware.TimeClock.Models.Entities
@@ -6,8 +7,7 @@ namespace PFSoftware.TimeClock.Models.Entities
     /// <summary>Represents a shift that was started or worked.</summary>
     internal class Shift : BaseINPC
     {
-        private int _id;
-        private string _role;
+        private string _id, _role;
         private readonly string fullDateFormat = @"yyyy-MM-dd hh\:mm\:ss tt";
         private readonly string shiftWeekFormat = "dd':'hh':'mm':'ss";
         private readonly string shiftDayFormat = "hh':'mm':'ss";
@@ -19,7 +19,7 @@ namespace PFSoftware.TimeClock.Models.Entities
         #region Modifying Properties
 
         /// <summary>User ID</summary>
-        public int ID
+        public string ID
         {
             get => _id;
             private set { _id = value; NotifyPropertyChanged(nameof(ID)); }
@@ -156,7 +156,7 @@ namespace PFSoftware.TimeClock.Models.Entities
         /// <param name="role"></param>
         /// <param name="start">Start time of <see cref="Shift"/></param>
         /// <param name="startOffset">The UTC offset from the time the <see cref="Shift"/> started</param>
-        internal Shift(int id, string role, DateTime start, TimeSpan startOffset) : this(id, role, start, startOffset, new DateTime(), TimeSpan.Zero, false)
+        internal Shift(string id, string role, DateTime start, TimeSpan startOffset) : this(id, role, start, startOffset, new DateTime(), TimeSpan.Zero, false)
         {
         }
 
@@ -168,7 +168,7 @@ namespace PFSoftware.TimeClock.Models.Entities
         /// <param name="end">End of <see cref="Shift"/></param>
         /// <param name="endOffset">The UTC offset from the time the <see cref="Shift"/> ended</param>
         /// <param name="edited">Has this <see cref="Shift"/> been edited?</param>
-        internal Shift(int id, string role, DateTime start, TimeSpan startOffset, DateTime end, TimeSpan endOffset, bool edited)
+        internal Shift(string id, string role, DateTime start, TimeSpan startOffset, DateTime end, TimeSpan endOffset, bool edited)
         {
             ID = id;
             Role = role;

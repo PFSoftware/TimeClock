@@ -3,13 +3,14 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using TimeClock.Models.Entities;
 
 namespace PFSoftware.TimeClock.Views.Admin
 {
     /// <summary>Interaction logic for AdminRoles.xaml</summary>
     public partial class AdminRolesPage : INotifyPropertyChanged
     {
-        private ObservableCollection<string> _allRoles = new ObservableCollection<string>();
+        private ObservableCollection<Role> _allRoles = new ObservableCollection<Role>();
 
         #region Data-Binding
 
@@ -22,7 +23,7 @@ namespace PFSoftware.TimeClock.Views.Admin
         {
             Dispatcher.Invoke(() =>
             {
-                _allRoles = new ObservableCollection<string>(AppState.AllRoles);
+                _allRoles = new ObservableCollection<Role>(AppState.AllRoles);
                 LstRoles.ItemsSource = _allRoles;
                 LstRoles.Items.Refresh();
             });
@@ -44,7 +45,7 @@ namespace PFSoftware.TimeClock.Views.Admin
             string newRole = AppState.InputDialog("What name would you like your new role to have?", "Time Clock");
             if (newRole.Length > 0)
             {
-                if (!AppState.AllRoles.Contains(newRole))
+                if (!AppState.AllRoles.Exists(role => role.Name == newRole))
                 {
                     await AppState.AddNewRole(newRole).ConfigureAwait(false);
                     UpdateBindings();

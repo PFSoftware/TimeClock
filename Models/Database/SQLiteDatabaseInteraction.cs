@@ -9,8 +9,8 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
+using TimeClock.Models.Entities;
 
 namespace PFSoftware.TimeClock.Models.Database
 {
@@ -53,13 +53,16 @@ namespace PFSoftware.TimeClock.Models.Database
         /// <summary>Adds a Role to the database.</summary>
         /// <param name="newRole">Role to be added</param>
         /// <returns>True if successful</returns>
-        public async Task<bool> AddNewRole(string newRole)
+        public async Task<bool> AddNewRole(Role newRole)
         {
             SQLiteCommand cmd = new SQLiteCommand
             {
-                CommandText = "INSERT INTO Roles([Name]) VALUES(@newRole)"
+                CommandText = "INSERT INTO Roles([Name],[PayRate],[PayType],[PayPeriod]) VALUES(@newRole,@payRate,@payType,@payPeriod)"
             };
-            cmd.Parameters.AddWithValue("@newRole", newRole);
+            cmd.Parameters.AddWithValue("@newRole", newRole.Name);
+            cmd.Parameters.AddWithValue("@payRate", newRole.PayRate);
+            cmd.Parameters.AddWithValue("@payType", newRole.PayType);
+            cmd.Parameters.AddWithValue("@payPeriod", newRole.PayPeriod);
 
             return await SQLiteHelper.ExecuteCommand(_con, cmd).ConfigureAwait(false);
         }
@@ -67,7 +70,7 @@ namespace PFSoftware.TimeClock.Models.Database
         /// <summary>Deletes a Role from the database.</summary>
         /// <param name="deleteRole">Role to be deleted</param>
         /// <returns>True if successful</returns>
-        public async Task<bool> DeleteRole(string deleteRole)
+        public async Task<bool> DeleteRole(Role deleteRole)
         {
             //TODO Deleting Roles requires each User with that Role have at least one additional Role. The last Role for the entire system cannot be deleted. If a User has no other Roles, one must be assigned to them. A popup will handle that.
 
@@ -81,11 +84,14 @@ namespace PFSoftware.TimeClock.Models.Database
         /// <param name="originalRole">Original Role</param>
         /// <param name="modifyRole">Modified Role</param>
         /// <returns>True if successful</returns>
-        public async Task<bool> ModifyRole(string originalRole, string modifyRole)
+        public async Task<bool> ModifyRole(Role originalRole, Role modifyRole)
         {
-            SQLiteCommand cmd = new SQLiteCommand { CommandText = "UPDATE Roles SET [Name] = @newRole WHERE [Name] = @oldRole" };
-            cmd.Parameters.AddWithValue("@newRole", modifyRole);
-            cmd.Parameters.AddWithValue("@newRole", originalRole);
+            SQLiteCommand cmd = new SQLiteCommand { CommandText = "UPDATE Roles SET [Name] = @newRole, [PayRate] = @payRate, [PayType] = @payType, [PayPeriod] = @payPeriod WHERE [Name] = @oldRole" };
+            cmd.Parameters.AddWithValue("@newRole", modifyRole.Name);
+            cmd.Parameters.AddWithValue("@payRate", modifyRole.PayRate);
+            cmd.Parameters.AddWithValue("@payType", modifyRole.PayType);
+            cmd.Parameters.AddWithValue("@payPeriod", modifyRole.PayPeriod);
+            cmd.Parameters.AddWithValue("@oldRole", originalRole.Name);
 
             return await SQLiteHelper.ExecuteCommand(_con, cmd).ConfigureAwait(false);
         }
@@ -183,7 +189,7 @@ namespace PFSoftware.TimeClock.Models.Database
             DataSet ds = await SQLiteHelper.FillDataSet(_con, "SELECT * FROM LoggedInUsers").ConfigureAwait(false);
             if (ds.Tables[0].Rows.Count > 0)
             {
-                currentlyLoggedIn.AddRange(from DataRow dr in ds.Tables[0].Rows select new Shift(Int32Helper.Parse(dr["ID"]), dr["Role"].ToString(), DateTimeHelper.Parse(dr["TimeIn"].ToString()), TimeSpanHelper.Parse(dr["TimeInOffset"].ToString())));
+                currentlyLoggedIn.AddRange(from DataRow dr in ds.Tables[0].Rows select new Shift(dr["ID"].ToString(), dr["Role"].ToString(), DateTimeHelper.Parse(dr["TimeIn"].ToString()), TimeSpanHelper.Parse(dr["TimeInOffset"].ToString())));
             }
 
             return currentlyLoggedIn;
@@ -191,15 +197,13 @@ namespace PFSoftware.TimeClock.Models.Database
 
         /// <summary>Loads all Roles from the database.</summary>
         /// <returns>Returns the list of Roles</returns>
-        public async Task<List<string>> LoadRoles()
+        public async Task<List<Role>> LoadRoles()
         {
-            List<string> allRoles = new List<string>();
+            List<Role> allRoles = new List<Role>();
             DataSet ds = await SQLiteHelper.FillDataSet(_con, "SELECT * FROM Roles").ConfigureAwait(false);
             if (ds.Tables[0].Rows.Count > 0)
             {
-                allRoles.AddRange(from DataRow dr in ds.Tables[0].Rows select dr["Name"].ToString());
-                //foreach (DataRow dr in ds.Tables[0].Rows)
-                //allRoles.Add(dr["Role"].ToString());
+                allRoles.AddRange(from DataRow dr in ds.Tables[0].Rows select new Role(dr["Name"].ToString(), DecimalHelper.Parse(dr["PayRate"]), EnumHelper.Parse<PayType>(dr["PayType"].ToString()), EnumHelper.Parse<PayPeriod>(dr["PayPeriod"].ToString())));
             }
             return allRoles;
         }
@@ -207,7 +211,7 @@ namespace PFSoftware.TimeClock.Models.Database
         /// <summary>Loads all the selected User's Shifts from the database.</summary>
         /// <param name="userID"></param>
         /// <returns>Returns the list of Shifts</returns>
-        public async Task<List<Shift>> LoadShifts(int userID)
+        public async Task<List<Shift>> LoadShifts(string userID)
         {
             List<Shift> userShifts = new List<Shift>();
             SQLiteCommand cmd = new SQLiteCommand { CommandText = "SELECT * FROM Times WHERE [ID] = @id" };
@@ -226,7 +230,29 @@ namespace PFSoftware.TimeClock.Models.Database
         /// <summary>Assigns a <see cref="User"/> based on a DataRow.</summary>
         /// <param name="dr">DataRow to assign <see cref="User"/> from</param>
         /// <returns><see cref="User"/></returns>
-        private async Task<User> LoadUserFromDataRow(DataRow dr) => new User(Int32Helper.Parse(dr["ID"]), dr["Username"].ToString(), dr["FirstName"].ToString(), dr["LastName"].ToString(), dr["Password"].ToString(), BoolHelper.Parse(dr["LoggedIn"]), dr["Roles"].ToString().Split(',').Select(str => str.Trim()).Where(str => !string.IsNullOrEmpty(str)).ToList(), await LoadShifts(Int32Helper.Parse(dr["ID"])).ConfigureAwait(false));
+        private async Task<User> LoadUserFromDataRow(DataRow dr)
+        {
+            return new User(dr["ID"].ToString(), dr["Username"].ToString(), dr["FirstName"].ToString(), dr["LastName"].ToString(), dr["Password"].ToString(), BoolHelper.Parse(dr["LoggedIn"]), await LoadRoles(dr["ID"].ToString()).ConfigureAwait(false), await LoadShifts(dr["ID"].ToString()).ConfigureAwait(false));
+        }
+
+        /// <summary>Loads all <see cref="Role"/>s for a passed <see cref="User"/>'s ID.</summary>
+        /// <param name="id">ID of the <see cref="User"/> whose <see cref="Role"/>s are to be loaded</param>
+        /// <returns>List of <see cref="Role"/>s</returns>
+        private async Task<List<Role>> LoadRoles(string id)
+        {
+            List<Role> allRoles = new List<Role>();
+            SQLiteCommand cmd = new SQLiteCommand { CommandText = "SELECT * FROM UserRoles WHERE [ID] = @id" };
+            cmd.Parameters.AddWithValue("@id", id);
+
+            DataSet ds = await SQLiteHelper.FillDataSet(_con, cmd).ConfigureAwait(false);
+
+            if (ds.Tables[0].Rows.Count > 0)
+            {
+                allRoles.AddRange(from DataRow dr in ds.Tables[0].Rows
+                                  select new Role(dr["Name"].ToString(), DecimalHelper.Parse(dr["PayRate"].ToString()), EnumHelper.Parse<PayType>(dr["PayType"].ToString()), EnumHelper.Parse<PayPeriod>(dr["PayPeriod"].ToString())));
+            }
+            return allRoles;
+        }
 
         /// <summary>Loads a User from the database.</summary>
         /// <returns>User</returns>
