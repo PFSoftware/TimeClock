@@ -25,7 +25,7 @@ namespace PFSoftware.TimeClock.Views.Admin
                 foreach (User user in loggedInUsers)
                 {
                     users.Add(user.Names);
-                    await AppState.LogOut(new Shift(user.GetMostRecentShift()) { EndTimeUtc = DateTime.Now }).ConfigureAwait(false);
+                    await AppState.LogOut(new Shift(user.GetMostRecentShift()) { EndTimeUtc = DateTime.UtcNow, EndUtcOffset = TimeZoneInfo.Local.GetUtcOffset(DateTime.Now) }).ConfigureAwait(false);
                 }
                 AppState.DisplayNotification($"Users\n{string.Join("\n", users)}\nnow logged out.", "Time Clock");
             }

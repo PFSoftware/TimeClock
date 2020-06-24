@@ -102,7 +102,7 @@ namespace PFSoftware.TimeClock.Models.Entities
         {
             get
             {
-                List<Shift> shifts = new List<Shift>(Shifts.Where(shift => shift.StartTimeLocal >= (DateTime.Now - TimeZoneInfo.Utc.GetUtcOffset(DateTime.Now)).StartOfWeek(DayOfWeek.Sunday)).ToList());
+                List<Shift> shifts = new List<Shift>(Shifts.Where(shift => shift.StartTimeLocal >= (DateTime.Now - TimeZoneInfo.Local.GetUtcOffset(DateTime.Now)).StartOfWeek(DayOfWeek.Sunday)).ToList());
                 return shifts.Count > 0 ? new TimeSpan(shifts.Sum(shift => shift.Length.Ticks)) : LoggedIn ? DateTime.Now - GetMostRecentShift().StartTimeLocal : new TimeSpan();
             }
         }
