@@ -16,17 +16,17 @@
                 <GridView>
                     <GridViewColumn Width="400" DisplayMemberBinding="{Binding StartTimeLocalToString}">
                         <GridViewColumn.Header>
-                            <GridViewColumnHeader MaxWidth="400" Tag="ShiftStart" Click="LVShiftsColumnHeader_Click">Shift Start</GridViewColumnHeader>
+                            <GridViewColumnHeader MaxWidth="400" Tag="StartTimeLocal" Click="LVShiftsColumnHeader_Click">Shift Start</GridViewColumnHeader>
                         </GridViewColumn.Header>
                     </GridViewColumn>
                     <GridViewColumn Width="400" DisplayMemberBinding="{Binding EndTimeLocalToString}">
                         <GridViewColumn.Header>
-                            <GridViewColumnHeader MaxWidth="400" Tag="ShiftEnd" Click="LVShiftsColumnHeader_Click">Shift End</GridViewColumnHeader>
+                            <GridViewColumnHeader MaxWidth="400" Tag="EndTimeLocal" Click="LVShiftsColumnHeader_Click">Shift End</GridViewColumnHeader>
                         </GridViewColumn.Header>
                     </GridViewColumn>
-                    <GridViewColumn Width="225" DisplayMemberBinding="{Binding ShiftLengthToString}">
+                    <GridViewColumn Width="225" DisplayMemberBinding="{Binding LengthToString}">
                         <GridViewColumn.Header>
-                            <GridViewColumnHeader MaxWidth="225" Tag="ShiftLength" Click="LVShiftsColumnHeader_Click">Shift Length</GridViewColumnHeader>
+                            <GridViewColumnHeader MaxWidth="225" Tag="Length" Click="LVShiftsColumnHeader_Click">Shift Length</GridViewColumnHeader>
                         </GridViewColumn.Header>
                     </GridViewColumn>
                     <GridViewColumn Width="400" DisplayMemberBinding="{Binding Role}">

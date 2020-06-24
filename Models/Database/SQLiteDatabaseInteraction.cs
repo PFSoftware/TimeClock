@@ -98,11 +98,13 @@ namespace PFSoftware.TimeClock.Models.Database
         /// <param name="newShift"><see cref="Shift"/> to be added</param>
         public async Task<bool> AddShift(Shift newShift)
         {
-            SQLiteCommand cmd = new SQLiteCommand { CommandText = "INSERT INTO Times([ID],[Role],[TimeIn],[TimeOut],[Edited])VALUES(@id,@role,@timeIn,@timeOut,@edited); UPDATE Users SET [LoggedIn] = @loggedIn WHERE [ID] = @id" };
+            SQLiteCommand cmd = new SQLiteCommand { CommandText = "INSERT INTO Times([ID],[Role],[TimeIn],[TimeInOffset],[TimeOut],[TimeOutOffset],[Edited])VALUES(@id,@role,@timeIn,@timeInOffset,@timeOut,@timeOutOffset,@edited); UPDATE Users SET [LoggedIn] = @loggedIn WHERE [ID] = @id" };
             cmd.Parameters.AddWithValue("@id", newShift.ID);
             cmd.Parameters.AddWithValue("@role", newShift.Role);
             cmd.Parameters.AddWithValue("@timeIn", newShift.StartTimeUtcToString);
+            cmd.Parameters.AddWithValue("@timeInOffset", newShift.StartUtcOffsetToString);
             cmd.Parameters.AddWithValue("@timeOut", newShift.EndTimeUtcToString);
+            cmd.Parameters.AddWithValue("@timeOutOffset", newShift.EndUtcOffsetToString);
             cmd.Parameters.AddWithValue("@edited", newShift.Edited);
             cmd.Parameters.AddWithValue("@loggedIn", AppState.CurrentUser.LoggedIn);
 
@@ -116,11 +118,13 @@ namespace PFSoftware.TimeClock.Models.Database
         {
             SQLiteCommand cmd = new SQLiteCommand
             {
-                CommandText = "UPDATE Times SET [Role] = @role, [TimeIn] = @timeIn, [TimeOut] = @timeOut, [Edited] = @edited WHERE [ID] = @id AND [TimeIn] = @oldTimeIn"
+                CommandText = "UPDATE Times SET [Role] = @role, [TimeIn] = @timeIn, [TimeInOffset] = @timeInOffset, [TimeOut] = @timeOut, [TimeOutOffset] = @timeOutOffset, [Edited] = @edited WHERE [ID] = @id AND [TimeIn] = @oldTimeIn"
             };
             cmd.Parameters.AddWithValue("@role", newShift.Role);
             cmd.Parameters.AddWithValue("@timeIn", newShift.StartTimeUtcToString);
+            cmd.Parameters.AddWithValue("@timeInOffset", newShift.StartUtcOffsetToString);
             cmd.Parameters.AddWithValue("@timeOut", newShift.EndTimeUtcToString);
+            cmd.Parameters.AddWithValue("@timeOutOffset", newShift.EndUtcOffsetToString);
             cmd.Parameters.AddWithValue("@edited", newShift.Edited);
             cmd.Parameters.AddWithValue("@id", AppState.CurrentUser.ID);
             cmd.Parameters.AddWithValue("@oldTimeIn", oldShift.StartTimeUtcToString);
@@ -179,8 +183,9 @@ namespace PFSoftware.TimeClock.Models.Database
             DataSet ds = await SQLiteHelper.FillDataSet(_con, "SELECT * FROM LoggedInUsers").ConfigureAwait(false);
             if (ds.Tables[0].Rows.Count > 0)
             {
-                currentlyLoggedIn.AddRange(from DataRow dr in ds.Tables[0].Rows select new Shift(Int32Helper.Parse(dr["ID"]), dr["Role"].ToString(), DateTimeHelper.Parse(dr["TimeIn"].ToString())));
+                currentlyLoggedIn.AddRange(from DataRow dr in ds.Tables[0].Rows select new Shift(Int32Helper.Parse(dr["ID"]), dr["Role"].ToString(), DateTimeHelper.Parse(dr["TimeIn"].ToString()), TimeSpanHelper.Parse(dr["TimeInOffset"].ToString())));
             }
+
             return currentlyLoggedIn;
         }
 
@@ -212,7 +217,7 @@ namespace PFSoftware.TimeClock.Models.Database
 
             if (ds.Tables[0].Rows.Count > 0)
             {
-                userShifts.AddRange(from DataRow dr in ds.Tables[0].Rows select new Shift(userID, dr["Role"].ToString(), DateTimeHelper.Parse(dr["TimeIn"]), DateTimeHelper.Parse(dr["TimeOut"]), BoolHelper.Parse(dr["Edited"])));
+                userShifts.AddRange(from DataRow dr in ds.Tables[0].Rows select new Shift(userID, dr["Role"].ToString(), DateTimeHelper.Parse(dr["TimeIn"]), TimeSpanHelper.Parse(dr["TimeInOffset"].ToString()), DateTimeHelper.Parse(dr["TimeOut"]), TimeSpanHelper.Parse(dr["TimeOutOffset"].ToString()), BoolHelper.Parse(dr["Edited"])));
             }
 
             return userShifts.OrderByDescending(shift => shift.StartTimeUtc).ToList();
@@ -262,10 +267,11 @@ namespace PFSoftware.TimeClock.Models.Database
         /// <param name="loginShift">Shift started by User</param>
         public async Task<bool> LogIn(Shift loginShift)
         {
-            SQLiteCommand cmd = new SQLiteCommand { CommandText = "INSERT INTO Times([ID],[Role],[TimeIn],[Edited])VALUES(@id,@role,@timeIn,@edited); UPDATE Users SET [LoggedIn] = @loggedIn WHERE [ID] = @id" };
+            SQLiteCommand cmd = new SQLiteCommand { CommandText = "INSERT INTO Times([ID],[Role],[TimeIn],[TimeInOffset],[Edited])VALUES(@id,@role,@timeIn,@timeInOffset,@edited); UPDATE Users SET [LoggedIn] = @loggedIn WHERE [ID] = @id" };
             cmd.Parameters.AddWithValue("@id", loginShift.ID);
             cmd.Parameters.AddWithValue("@role", loginShift.Role);
             cmd.Parameters.AddWithValue("@timeIn", loginShift.StartTimeUtcToString);
+            cmd.Parameters.AddWithValue("@timeInOffset", loginShift.StartUtcOffsetToString);
             cmd.Parameters.AddWithValue("@edited", 0);
             cmd.Parameters.AddWithValue("@loggedIn", 1);
 
@@ -279,10 +285,11 @@ namespace PFSoftware.TimeClock.Models.Database
         {
             SQLiteCommand cmd = new SQLiteCommand
             {
-                CommandText = "UPDATE Times SET [TimeOut] = @timeOut WHERE [TimeIn] = @timeIn; UPDATE Users SET [LoggedIn] = @loggedIn WHERE [ID] = @id"
+                CommandText = "UPDATE Times SET [TimeOut] = @timeOut, [TimeOutOffset] = @timeOutOffset WHERE [TimeIn] = @timeIn; UPDATE Users SET [LoggedIn] = @loggedIn WHERE [ID] = @id"
             };
 
             cmd.Parameters.AddWithValue("@timeOut", logOutShift.EndTimeUtcToString);
+            cmd.Parameters.AddWithValue("@timeOutOffset", logOutShift.EndUtcOffsetToString);
             cmd.Parameters.AddWithValue("@timeIn", logOutShift.StartTimeUtcToString);
             cmd.Parameters.AddWithValue("@loggedIn", 0);
             cmd.Parameters.AddWithValue("@id", logOutShift.ID);

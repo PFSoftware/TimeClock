@@ -90,19 +90,25 @@ namespace PFSoftware.TimeClock.Models.Entities
         public string EndTimeUtcToString => EndTimeUtc != DateTime.MinValue ? EndTimeUtc.ToString(fullDateFormat, culture) : "";
 
         /// <summary>Time <see cref="Shift"/> started, formatted to local time.</summary>
-        public DateTime StartTimeLocal => StartTimeUtc - StartUtcOffset;
+        public DateTime StartTimeLocal => StartTimeUtc + StartUtcOffset;
 
-        /// <summary>Time <see cref="Shift"/> ended, formatted to local time.</summary>
-        public DateTime EndTimeLocal => EndTimeUtc - EndUtcOffset;
+        /// <summary>Time <see cref="Shift"/> ended in local time.</summary>
+        public DateTime EndTimeLocal => EndTimeUtc + EndUtcOffset;
 
         /// <summary>Time <see cref="Shift"/> started, formatted to string.</summary>
         public string StartTimeLocalToString => StartTimeLocal.ToString(fullDateFormat, culture);
 
-        /// <summary>Time <see cref="Shift"/> ended, formatted to string.</summary>
+        /// <summary>Time <see cref="Shift"/> ended in local time, formatted to string.</summary>
         public string EndTimeLocalToString => EndTimeLocal != DateTime.MinValue ? EndTimeLocal.ToString(fullDateFormat, culture) : "";
 
+        /// <summary>The UTC offset from the time the <see cref="Shift"/> started, formatted.</summary>
+        public string StartUtcOffsetToString => StartUtcOffset.ToString();
+
+        /// <summary>The UTC offset from the time the <see cref="Shift"/> ended, formatted.</summary>
+        public string EndUtcOffsetToString => EndTimeUtc != DateTime.MinValue ? EndUtcOffset.ToString() : "";
+
         /// <summary>Length of <see cref="Shift"/>.</summary>
-        public TimeSpan Length => EndTimeUtc != DateTime.MinValue ? EndTimeUtc - StartTimeUtc : DateTime.Now - StartTimeUtc;
+        public TimeSpan Length => EndTimeUtc != DateTime.MinValue ? EndTimeUtc - StartTimeUtc : DateTime.UtcNow - StartTimeUtc;
 
         /// <summary>Length of <see cref="Shift"/>, formatted to string.</summary>
         public string LengthToString => EndTimeUtc != DateTime.MinValue
@@ -148,28 +154,34 @@ namespace PFSoftware.TimeClock.Models.Entities
         /// <summary>Initializes a new instance of <see cref="Shift"/> by assigning only the ShiftStart Property.</summary>
         /// <param name="id">ID</param>
         /// <param name="role"></param>
-        /// <param name="shiftStart">Start time of <see cref="Shift"/></param>
-        internal Shift(int id, string role, DateTime shiftStart, TimeSpan startOffset) : this(id, role, shiftStart, new DateTime(), false)
+        /// <param name="start">Start time of <see cref="Shift"/></param>
+        /// <param name="startOffset">The UTC offset from the time the <see cref="Shift"/> started</param>
+        internal Shift(int id, string role, DateTime start, TimeSpan startOffset) : this(id, role, start, startOffset, new DateTime(), TimeSpan.Zero, false)
         {
         }
 
         /// <summary>Initializes a new instance of <see cref="Shift"/> by assigning Properties.</summary>
         /// <param name="id">ID</param>
         /// <param name="role">The <see cref="User"/>'s role this <see cref="Shift"/></param>
-        /// <param name="shiftStart">Start of <see cref="Shift"/></param>
-        /// <param name="shiftEnd">End of <see cref="Shift"/></param>
-        internal Shift(int id, string role, DateTime shiftStart, TimeSpan startOffset, DateTime shiftEnd, TimeSpan endOffset, bool edited)
+        /// <param name="start">Start of <see cref="Shift"/></param>
+        /// <param name="startOffset">The UTC offset from the time the <see cref="Shift"/> started</param>
+        /// <param name="end">End of <see cref="Shift"/></param>
+        /// <param name="endOffset">The UTC offset from the time the <see cref="Shift"/> ended</param>
+        /// <param name="edited">Has this <see cref="Shift"/> been edited?</param>
+        internal Shift(int id, string role, DateTime start, TimeSpan startOffset, DateTime end, TimeSpan endOffset, bool edited)
         {
             ID = id;
             Role = role;
-            StartTimeUtc = shiftStart;
-            EndTimeUtc = shiftEnd;
+            StartTimeUtc = start;
+            StartUtcOffset = startOffset;
+            EndTimeUtc = end;
+            EndUtcOffset = endOffset;
             Edited = edited;
         }
 
         /// <summary>Replaces this instance of <see cref="Shift"/> with another instance.</summary>
         /// <param name="other">Instance of <see cref="Shift"/> to replace this instance</param>
-        internal Shift(Shift other) : this(other.ID, other.Role, other.StartTimeUtc, other.EndTimeUtc, other.Edited)
+        internal Shift(Shift other) : this(other.ID, other.Role, other.StartTimeUtc, other.StartUtcOffset, other.EndTimeUtc, other.EndUtcOffset, other.Edited)
         {
         }
 

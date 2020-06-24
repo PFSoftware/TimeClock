@@ -31,7 +31,8 @@ namespace PFSoftware.TimeClock.Views.Users
 
             if (!AppState.CurrentUser.LoggedIn)
             {
-                Shift newShift = new Shift(AppState.CurrentUser.ID, CmbRoles.SelectedItem.ToString(), DateTime.Now);
+                Shift newShift = new Shift(AppState.CurrentUser.ID, CmbRoles.SelectedItem.ToString(), DateTime.UtcNow, TimeZoneInfo.Local.GetUtcOffset(DateTime.Now));
+                ;
                 if (await AppState.LogIn(newShift).ConfigureAwait(false))
                 {
                     AppState.CurrentUser.AddShift(newShift);
@@ -41,7 +42,7 @@ namespace PFSoftware.TimeClock.Views.Users
             }
             else
             {
-                Shift currentShift = new Shift(AppState.CurrentUser.GetMostRecentShift()) { EndTimeUtc = DateTime.Now };
+                Shift currentShift = new Shift(AppState.CurrentUser.GetMostRecentShift()) { EndTimeUtc = DateTime.UtcNow, EndUtcOffset = TimeZoneInfo.Local.GetUtcOffset(DateTime.Now) };
                 if (currentShift.Length > new TimeSpan(0, 0, 1) && await AppState.LogOut(currentShift).ConfigureAwait(false))
                 {
                     AppState.CurrentUser.ModifyShift(AppState.CurrentUser.GetMostRecentShift(), currentShift);
@@ -49,17 +50,7 @@ namespace PFSoftware.TimeClock.Views.Users
                 }
                 _timer.Stop();
             }
-            List<Shift> allShifts = new List<Shift>(AppState.CurrentUser.Shifts);
-            TimeSpan total = new TimeSpan();
-            foreach (Shift shift in allShifts)
-            {
-                DateTime startOfWeek = DateTime.Now.StartOfWeek(DayOfWeek.Sunday);
-                if (shift.StartTimeUtc >= startOfWeek)
-                {
-                    total.Add(shift.Length);
-                }
-            }
-            TimeSpan ts = new TimeSpan(allShifts.Where(shift => shift.StartTimeUtc >= DateTime.Now.StartOfWeek(DayOfWeek.Sunday)).ToList().Sum(shift => shift.Length.Ticks));
+
             Dispatcher.Invoke(() =>
             {
                 BtnInOut.IsEnabled = true;

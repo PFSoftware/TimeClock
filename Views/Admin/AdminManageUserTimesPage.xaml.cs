@@ -36,11 +36,12 @@ namespace PFSoftware.TimeClock.Views.Admin
         {
             if (_selectedShift.StartTimeUtc != DateTime.MinValue)
             {
-                DateIn.SelectedDate = _selectedShift.StartTimeUtc;
-                CmbHourIn.SelectedIndex = _selectedShift.StartTimeUtc.Hour % 12;
-                CmbMinuteIn.SelectedItem = _selectedShift.StartTimeUtc.Minute;
-                CmbSecondIn.SelectedItem = _selectedShift.StartTimeUtc.Second;
-                CmbAMPMIn.SelectedIndex = _selectedShift.StartTimeUtc.Hour >= 12 ? 1 : 0;
+                DateIn.SelectedDate = _selectedShift.StartTimeLocal;
+                CmbHourIn.SelectedIndex = _selectedShift.StartTimeLocal.Hour % 12;
+                CmbMinuteIn.SelectedItem = _selectedShift.StartTimeLocal.Minute;
+                CmbSecondIn.SelectedItem = _selectedShift.StartTimeLocal.Second;
+                CmbAMPMIn.SelectedIndex = _selectedShift.StartTimeLocal.Hour >= 12 ? 1 : 0;
+                TxtInOffset.Text = _selectedShift.StartUtcOffsetToString;
             }
             else
             {
@@ -54,11 +55,12 @@ namespace PFSoftware.TimeClock.Views.Admin
         {
             if (_selectedShift.EndTimeUtc != DateTime.MinValue)
             {
-                DateOut.SelectedDate = _selectedShift.EndTimeUtc != DateTime.MinValue ? _selectedShift.EndTimeUtc : _selectedShift.StartTimeUtc;
-                CmbHourOut.SelectedIndex = _selectedShift.EndTimeUtc.Hour % 12;
-                CmbMinuteOut.SelectedItem = _selectedShift.EndTimeUtc.Minute;
-                CmbSecondOut.SelectedItem = _selectedShift.EndTimeUtc.Second;
-                CmbAMPMOut.SelectedIndex = _selectedShift.EndTimeUtc.Hour >= 12 ? 1 : 0;
+                DateOut.SelectedDate = _selectedShift.EndTimeLocal != DateTime.MinValue ? _selectedShift.EndTimeLocal : _selectedShift.StartTimeLocal;
+                CmbHourOut.SelectedIndex = _selectedShift.EndTimeLocal.Hour % 12;
+                CmbMinuteOut.SelectedItem = _selectedShift.EndTimeLocal.Minute;
+                CmbSecondOut.SelectedItem = _selectedShift.EndTimeLocal.Second;
+                CmbAMPMOut.SelectedIndex = _selectedShift.EndTimeLocal.Hour >= 12 ? 1 : 0;
+                TxtOutOffset.Text = _selectedShift.StartUtcOffsetToString;
             }
             else
             {
@@ -85,10 +87,12 @@ namespace PFSoftware.TimeClock.Views.Admin
             CmbMinuteIn.SelectedIndex = -1;
             CmbSecondIn.SelectedIndex = -1;
             CmbAMPMIn.SelectedIndex = -1;
+            TxtInOffset.Text = "";
             CmbHourOut.SelectedIndex = -1;
             CmbMinuteOut.SelectedIndex = -1;
             CmbSecondOut.SelectedIndex = -1;
             CmbAMPMOut.SelectedIndex = -1;
+            TxtOutOffset.Text = "";
             CmbRole.SelectedIndex = -1;
             DateIn.SelectedDate = null;
             DateIn.DisplayDate = DateTime.Today;
@@ -135,6 +139,7 @@ namespace PFSoftware.TimeClock.Views.Admin
                 CmbMinuteOut.Items.Add(i);
                 CmbSecondOut.Items.Add(i);
             }
+            TimeZoneInfo.GetSystemTimeZones();
         }
 
         #endregion Page Manipulation
@@ -158,27 +163,44 @@ namespace PFSoftware.TimeClock.Views.Admin
             CmbSecondIn.SelectedItem = DateTime.Now.Second;
             CmbAMPMIn.SelectedIndex = DateTime.Now.Hour >= 12 ? 1 : 0;
             CmbRole.SelectedIndex = 0;
+            TxtInOffset.Text = TimeZoneInfo.Local.GetUtcOffset(DateTime.Now).ToString();
         }
 
         private async void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             DateTime dayIn = DateTimeHelper.Parse(DateIn.SelectedDate);
             DateTime timeIn = new DateTime(dayIn.Year, dayIn.Month, dayIn.Day, CmbAMPMIn.Text == "AM" ? CmbHourIn.SelectedIndex : CmbHourIn.SelectedIndex + 12, Int32Helper.Parse(CmbMinuteIn.SelectedItem), Int32Helper.Parse(CmbSecondIn.SelectedItem));
+            TimeSpan tsIn = TimeSpanHelper.Parse(TxtInOffset.Text);
             DateTime dayOut = DateTimeHelper.Parse(DateOut.SelectedDate);
             DateTime timeOut = CmbHourOut.SelectedIndex >= 0 ? new DateTime(dayOut.Year, dayOut.Month, dayOut.Day, CmbAMPMOut.Text == "AM" ? CmbHourOut.SelectedIndex : CmbHourOut.SelectedIndex + 12, Int32Helper.Parse(CmbMinuteOut.SelectedItem), Int32Helper.Parse(CmbSecondOut.SelectedItem)) : DateTime.MinValue;
-            Shift newShift = new Shift(AppState.CurrentUser.ID, CmbRole.SelectedItem.ToString(), timeIn, timeOut, true);
-
-            if (!_newTime)
-                await AppState.ModifyShift(_selectedShift, newShift).ConfigureAwait(false);
-            else
-                await AppState.AddShift(newShift).ConfigureAwait(false);
-
-            AppState.CurrentUser.LoggedIn = AppState.CurrentUser.GetMostRecentShift().EndTimeUtc == DateTime.MinValue;
-            Dispatcher.Invoke(() =>
+            TimeSpan tsOut = TxtOutOffset.Text.Length > 0 ? TimeSpanHelper.Parse(TxtOutOffset.Text) : TimeSpan.Zero;
+            Shift newShift = new Shift(AppState.CurrentUser.ID, CmbRole.SelectedItem.ToString(), timeIn - tsIn, tsIn, timeOut - tsOut, tsOut, true);
+            bool save = false;
+            if (tsIn != TimeSpan.Zero || (tsIn == TimeSpan.Zero && (string.IsNullOrWhiteSpace(TxtInOffset.Text) || TxtInOffset.Text == "00:00:00")))
             {
-                Clear();
-                RefreshItemsSource();
-            });
+                if (tsOut != TimeSpan.Zero)
+                    save = true;
+                else
+                      if (tsOut == TimeSpan.Zero && (string.IsNullOrWhiteSpace(TxtOutOffset.Text) || TxtOutOffset.Text == "00:00:00"))
+                    save = true;
+            }
+
+            if (save)
+            {
+                if (!_newTime)
+                    await AppState.ModifyShift(_selectedShift, newShift).ConfigureAwait(false);
+                else
+                    await AppState.AddShift(newShift).ConfigureAwait(false);
+
+                AppState.CurrentUser.LoggedIn = AppState.CurrentUser.GetMostRecentShift().EndTimeUtc == DateTime.MinValue;
+                Dispatcher.Invoke(() =>
+                {
+                    Clear();
+                    RefreshItemsSource();
+                });
+            }
+            else
+                AppState.DisplayNotification("Please ensure that valid UTC offsets are entered in the TextBoxes, e.g. \"-05:00:00\" or \"08:45:00\". The clock in and out offsets should be the same unless a time zone transition occurred.", "Time Clock");
         }
 
         private void LVShiftsColumnHeader_Click(object sender, RoutedEventArgs e) => _sort =

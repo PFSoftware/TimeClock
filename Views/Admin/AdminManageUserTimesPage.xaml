@@ -18,7 +18,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Text="{Binding Names}" HorizontalAlignment="Center" Margin="0,0,0,10" />
-        <ListView x:Name="LVShifts" Grid.Column="0" Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Visible" Height="525" FontFamily="Lucida Console" SelectionChanged="LVShifts_SelectionChanged" Margin="0,0,10,10">
+        <ListView x:Name="LVShifts" Grid.Column="0" Grid.Row="1" ScrollViewer.VerticalScrollBarVisibility="Visible" Height="758" FontFamily="Lucida Console" SelectionChanged="LVShifts_SelectionChanged" Margin="0,0,10,10">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Width="400" DisplayMemberBinding="{Binding StartTimeLocalToString}">
@@ -53,6 +53,7 @@
                     <ComboBoxItem Content="PM" />
                 </ComboBox>
             </StackPanel>
+            <TextBox x:Name="TxtInOffset" Margin="0,0,0,10" />
             <TextBlock Text="OUT Time:" TextAlignment="Center" />
             <DatePicker x:Name="DateOut" CalendarStyle="{StaticResource CalendarStyle}" Margin="0,0,0,10" />
             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
@@ -66,6 +67,7 @@
                     <ComboBoxItem Content="PM" />
                 </ComboBox>
             </StackPanel>
+            <TextBox x:Name="TxtOutOffset" Margin="0,0,0,10" />
             <TextBlock Width="400" Text="Role:" TextAlignment="Center" Margin="0,0,0,10" />
             <ComboBox x:Name="CmbRole" ItemsSource="{Binding}" Margin="0,0,0,10" />
             <Button x:Name="BtnSave" Content="_Save" IsDefault="True" IsEnabled="False" Click="BtnSave_Click" Margin="0,0,0,10" />

@@ -86,12 +86,10 @@ namespace PFSoftware.TimeClock.Models.Entities
         {
             get
             {
-                List<Shift> shifts = new List<Shift>(Shifts.Where(shift => shift.StartTimeUtc > DateTime.Today).ToList());
-                return shifts.Count > 0 ? new TimeSpan(shifts.Sum(shift => shift.Length.Ticks)) : LoggedIn ? DateTime.Now - GetMostRecentShift().StartTimeUtc : new TimeSpan();
+                List<Shift> shifts = new List<Shift>(Shifts.Where(shift => shift.StartTimeLocal > DateTime.Today).ToList());
+                return shifts.Count > 0 ? new TimeSpan(shifts.Sum(shift => shift.Length.Ticks)) : LoggedIn ? DateTime.Now - GetMostRecentShift().StartTimeLocal : new TimeSpan();
             }
         }
-
-        // => LoggedIn ? new TimeSpan(Shifts.Where(shift => shift.ShiftStart > DateTime.Today).ToList().Sum(shift => shift.ShiftLength.Ticks));
 
         /// <summary>Total hours worked today, formatted.</summary>
         public string TotalHoursTodayToString => TotalHoursToday.ToString(format, culture);
@@ -104,8 +102,8 @@ namespace PFSoftware.TimeClock.Models.Entities
         {
             get
             {
-                List<Shift> shifts = new List<Shift>(Shifts.Where(shift => shift.StartTimeUtc >= DateTime.Now.StartOfWeek(DayOfWeek.Sunday)).ToList());
-                return shifts.Count > 0 ? new TimeSpan(shifts.Sum(shift => shift.Length.Ticks)) : LoggedIn ? DateTime.Now - GetMostRecentShift().StartTimeUtc : new TimeSpan();
+                List<Shift> shifts = new List<Shift>(Shifts.Where(shift => shift.StartTimeLocal >= (DateTime.Now - TimeZoneInfo.Utc.GetUtcOffset(DateTime.Now)).StartOfWeek(DayOfWeek.Sunday)).ToList());
+                return shifts.Count > 0 ? new TimeSpan(shifts.Sum(shift => shift.Length.Ticks)) : LoggedIn ? DateTime.Now - GetMostRecentShift().StartTimeLocal : new TimeSpan();
             }
         }
 
