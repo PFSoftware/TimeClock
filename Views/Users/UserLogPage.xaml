@@ -14,12 +14,12 @@
         <ListView Grid.Row="0" Name="LVShifts" ScrollViewer.VerticalScrollBarVisibility="Visible" Height="525" FontFamily="Lucida Console">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Width="400" DisplayMemberBinding="{Binding ShiftStartToString}">
+                    <GridViewColumn Width="400" DisplayMemberBinding="{Binding StartTimeLocalToString}">
                         <GridViewColumn.Header>
                             <GridViewColumnHeader MaxWidth="400" Tag="ShiftStart" Click="LVShiftsColumnHeader_Click">Shift Start</GridViewColumnHeader>
                         </GridViewColumn.Header>
                     </GridViewColumn>
-                    <GridViewColumn Width="400" DisplayMemberBinding="{Binding ShiftEndToString}">
+                    <GridViewColumn Width="400" DisplayMemberBinding="{Binding EndTimeLocalToString}">
                         <GridViewColumn.Header>
                             <GridViewColumnHeader MaxWidth="400" Tag="ShiftEnd" Click="LVShiftsColumnHeader_Click">Shift End</GridViewColumnHeader>
                         </GridViewColumn.Header>

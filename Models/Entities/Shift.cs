@@ -12,7 +12,8 @@ namespace PFSoftware.TimeClock.Models.Entities
         private readonly string shiftWeekFormat = "dd':'hh':'mm':'ss";
         private readonly string shiftDayFormat = "hh':'mm':'ss";
         private readonly CultureInfo culture = new CultureInfo("en-US");
-        private DateTime _shiftStart, _shiftEnd;
+        private DateTime _startTimeUtc, _endTimeUtc;
+        private TimeSpan _startUtcOffset, _endUtcOffset;
         private bool _edited;
 
         #region Modifying Properties
@@ -36,21 +37,35 @@ namespace PFSoftware.TimeClock.Models.Entities
         }
 
         /// <summary>Time <see cref="Shift"/> started.</summary>
-        public DateTime ShiftStart
+        public DateTime StartTimeUtc
         {
-            get => _shiftStart;
-            private set { _shiftStart = value; NotifyPropertyChanged(nameof(ShiftStart), nameof(ShiftLength), nameof(ShiftLengthToString)); }
+            get => _startTimeUtc;
+            private set { _startTimeUtc = value; NotifyPropertyChanged(nameof(StartTimeUtc), nameof(StartTimeUtcToString), nameof(StartTimeLocal), nameof(StartTimeLocalToString), nameof(Length), nameof(LengthToString)); }
+        }
+
+        /// <summary>The UTC offset from the time the <see cref="Shift"/> started.</summary>
+        public TimeSpan StartUtcOffset
+        {
+            get => _startUtcOffset;
+            set { _startUtcOffset = value; NotifyPropertyChanged(nameof(StartUtcOffset), nameof(StartTimeLocal), nameof(StartTimeLocalToString)); }
         }
 
         /// <summary>Time <see cref="Shift"/> ended.</summary>
-        public DateTime ShiftEnd
+        public DateTime EndTimeUtc
         {
-            get => _shiftEnd;
+            get => _endTimeUtc;
             set
             {
-                _shiftEnd = value;
-                NotifyPropertyChanged(nameof(ShiftEnd), nameof(ShiftLength), nameof(ShiftLengthToString));
+                _endTimeUtc = value;
+                NotifyPropertyChanged(nameof(EndTimeUtc), nameof(EndTimeUtcToString), nameof(EndTimeLocal), nameof(EndTimeLocalToString), nameof(Length), nameof(LengthToString));
             }
+        }
+
+        /// <summary>The UTC offset from the time the <see cref="Shift"/> ended.</summary>
+        public TimeSpan EndUtcOffset
+        {
+            get => _endUtcOffset;
+            set { _endUtcOffset = value; NotifyPropertyChanged(nameof(EndUtcOffset), nameof(EndTimeLocal), nameof(EndTimeLocalToString)); }
         }
 
         /// <summary>Has this <see cref="Shift"/> been edited?</summary>
@@ -69,19 +84,31 @@ namespace PFSoftware.TimeClock.Models.Entities
         #region Helper Properties
 
         /// <summary>Time <see cref="Shift"/> started, formatted to string.</summary>
-        public string ShiftStartToString => ShiftStart.ToString(fullDateFormat, culture);
+        public string StartTimeUtcToString => StartTimeUtc.ToString(fullDateFormat, culture);
 
         /// <summary>Time <see cref="Shift"/> ended, formatted to string.</summary>
-        public string ShiftEndToString => ShiftEnd != DateTime.MinValue ? ShiftEnd.ToString(fullDateFormat, culture) : "";
+        public string EndTimeUtcToString => EndTimeUtc != DateTime.MinValue ? EndTimeUtc.ToString(fullDateFormat, culture) : "";
+
+        /// <summary>Time <see cref="Shift"/> started, formatted to local time.</summary>
+        public DateTime StartTimeLocal => StartTimeUtc - StartUtcOffset;
+
+        /// <summary>Time <see cref="Shift"/> ended, formatted to local time.</summary>
+        public DateTime EndTimeLocal => EndTimeUtc - EndUtcOffset;
+
+        /// <summary>Time <see cref="Shift"/> started, formatted to string.</summary>
+        public string StartTimeLocalToString => StartTimeLocal.ToString(fullDateFormat, culture);
+
+        /// <summary>Time <see cref="Shift"/> ended, formatted to string.</summary>
+        public string EndTimeLocalToString => EndTimeLocal != DateTime.MinValue ? EndTimeLocal.ToString(fullDateFormat, culture) : "";
 
         /// <summary>Length of <see cref="Shift"/>.</summary>
-        public TimeSpan ShiftLength => ShiftEnd != DateTime.MinValue ? ShiftEnd - ShiftStart : DateTime.Now - ShiftStart;
+        public TimeSpan Length => EndTimeUtc != DateTime.MinValue ? EndTimeUtc - StartTimeUtc : DateTime.Now - StartTimeUtc;
 
         /// <summary>Length of <see cref="Shift"/>, formatted to string.</summary>
-        public string ShiftLengthToString => ShiftEnd != DateTime.MinValue
-            ? ShiftLength.Days > 0
-            ? ShiftLength.ToString(shiftWeekFormat, culture)
-            : ShiftLength.ToString(shiftDayFormat, culture)
+        public string LengthToString => EndTimeUtc != DateTime.MinValue
+            ? Length.Days > 0
+            ? Length.ToString(shiftWeekFormat, culture)
+            : Length.ToString(shiftDayFormat, culture)
             : "";
 
         #endregion Helper Properties
@@ -90,9 +117,9 @@ namespace PFSoftware.TimeClock.Models.Entities
 
         private static bool Equals(Shift left, Shift right)
         {
-            if (ReferenceEquals(null, left) && ReferenceEquals(null, right)) return true;
-            if (ReferenceEquals(null, left) ^ ReferenceEquals(null, right)) return false;
-            return left.ID == right.ID && left.Role == right.Role && left.ShiftStart == right.ShiftStart && left.ShiftEnd == right.ShiftEnd && left.Edited == right.Edited;
+            if (left is null && right is null) return true;
+            if (left is null ^ right is null) return false;
+            return left.ID == right.ID && left.Role == right.Role && left.StartTimeUtc == right.StartTimeUtc && left.EndTimeUtc == right.EndTimeUtc && left.Edited == right.Edited;
         }
 
         public override bool Equals(object obj) => Equals(this, obj as Shift);
@@ -105,7 +132,7 @@ namespace PFSoftware.TimeClock.Models.Entities
 
         public override int GetHashCode() => base.GetHashCode() ^ 17;
 
-        public override string ToString() => $"{ID}: {ShiftStart}, {ShiftEnd}";
+        public override string ToString() => $"{ID}: {StartTimeUtc}, {EndTimeUtc}";
 
         #endregion Override Operators
 
@@ -114,15 +141,15 @@ namespace PFSoftware.TimeClock.Models.Entities
         /// <summary>Initalizes a default instance of <see cref="Shift"/>.</summary>
         internal Shift()
         {
-            ShiftStart = new DateTime();
-            ShiftEnd = new DateTime();
+            StartTimeUtc = new DateTime();
+            EndTimeUtc = new DateTime();
         }
 
         /// <summary>Initializes a new instance of <see cref="Shift"/> by assigning only the ShiftStart Property.</summary>
         /// <param name="id">ID</param>
         /// <param name="role"></param>
         /// <param name="shiftStart">Start time of <see cref="Shift"/></param>
-        internal Shift(int id, string role, DateTime shiftStart) : this(id, role, shiftStart, new DateTime(), false)
+        internal Shift(int id, string role, DateTime shiftStart, TimeSpan startOffset) : this(id, role, shiftStart, new DateTime(), false)
         {
         }
 
@@ -131,18 +158,18 @@ namespace PFSoftware.TimeClock.Models.Entities
         /// <param name="role">The <see cref="User"/>'s role this <see cref="Shift"/></param>
         /// <param name="shiftStart">Start of <see cref="Shift"/></param>
         /// <param name="shiftEnd">End of <see cref="Shift"/></param>
-        internal Shift(int id, string role, DateTime shiftStart, DateTime shiftEnd, bool edited)
+        internal Shift(int id, string role, DateTime shiftStart, TimeSpan startOffset, DateTime shiftEnd, TimeSpan endOffset, bool edited)
         {
             ID = id;
             Role = role;
-            ShiftStart = shiftStart;
-            ShiftEnd = shiftEnd;
+            StartTimeUtc = shiftStart;
+            EndTimeUtc = shiftEnd;
             Edited = edited;
         }
 
         /// <summary>Replaces this instance of <see cref="Shift"/> with another instance.</summary>
         /// <param name="other">Instance of <see cref="Shift"/> to replace this instance</param>
-        internal Shift(Shift other) : this(other.ID, other.Role, other.ShiftStart, other.ShiftEnd, other.Edited)
+        internal Shift(Shift other) : this(other.ID, other.Role, other.StartTimeUtc, other.EndTimeUtc, other.Edited)
         {
         }
 

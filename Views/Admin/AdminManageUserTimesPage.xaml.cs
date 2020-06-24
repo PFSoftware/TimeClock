@@ -34,13 +34,13 @@ namespace PFSoftware.TimeClock.Views.Admin
 
         private void DisplayTimeIn()
         {
-            if (_selectedShift.ShiftStart != DateTime.MinValue)
+            if (_selectedShift.StartTimeUtc != DateTime.MinValue)
             {
-                DateIn.SelectedDate = _selectedShift.ShiftStart;
-                CmbHourIn.SelectedIndex = _selectedShift.ShiftStart.Hour % 12;
-                CmbMinuteIn.SelectedItem = _selectedShift.ShiftStart.Minute;
-                CmbSecondIn.SelectedItem = _selectedShift.ShiftStart.Second;
-                CmbAMPMIn.SelectedIndex = _selectedShift.ShiftStart.Hour >= 12 ? 1 : 0;
+                DateIn.SelectedDate = _selectedShift.StartTimeUtc;
+                CmbHourIn.SelectedIndex = _selectedShift.StartTimeUtc.Hour % 12;
+                CmbMinuteIn.SelectedItem = _selectedShift.StartTimeUtc.Minute;
+                CmbSecondIn.SelectedItem = _selectedShift.StartTimeUtc.Second;
+                CmbAMPMIn.SelectedIndex = _selectedShift.StartTimeUtc.Hour >= 12 ? 1 : 0;
             }
             else
             {
@@ -52,13 +52,13 @@ namespace PFSoftware.TimeClock.Views.Admin
 
         private void DisplayTimeOut()
         {
-            if (_selectedShift.ShiftEnd != DateTime.MinValue)
+            if (_selectedShift.EndTimeUtc != DateTime.MinValue)
             {
-                DateOut.SelectedDate = _selectedShift.ShiftEnd != DateTime.MinValue ? _selectedShift.ShiftEnd : _selectedShift.ShiftStart;
-                CmbHourOut.SelectedIndex = _selectedShift.ShiftEnd.Hour % 12;
-                CmbMinuteOut.SelectedItem = _selectedShift.ShiftEnd.Minute;
-                CmbSecondOut.SelectedItem = _selectedShift.ShiftEnd.Second;
-                CmbAMPMOut.SelectedIndex = _selectedShift.ShiftEnd.Hour >= 12 ? 1 : 0;
+                DateOut.SelectedDate = _selectedShift.EndTimeUtc != DateTime.MinValue ? _selectedShift.EndTimeUtc : _selectedShift.StartTimeUtc;
+                CmbHourOut.SelectedIndex = _selectedShift.EndTimeUtc.Hour % 12;
+                CmbMinuteOut.SelectedItem = _selectedShift.EndTimeUtc.Minute;
+                CmbSecondOut.SelectedItem = _selectedShift.EndTimeUtc.Second;
+                CmbAMPMOut.SelectedIndex = _selectedShift.EndTimeUtc.Hour >= 12 ? 1 : 0;
             }
             else
             {
@@ -173,7 +173,7 @@ namespace PFSoftware.TimeClock.Views.Admin
             else
                 await AppState.AddShift(newShift).ConfigureAwait(false);
 
-            AppState.CurrentUser.LoggedIn = AppState.CurrentUser.GetMostRecentShift().ShiftEnd == DateTime.MinValue;
+            AppState.CurrentUser.LoggedIn = AppState.CurrentUser.GetMostRecentShift().EndTimeUtc == DateTime.MinValue;
             Dispatcher.Invoke(() =>
             {
                 Clear();

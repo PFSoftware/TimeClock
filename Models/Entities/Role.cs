@@ -23,8 +23,8 @@ namespace TimeClock.Models.Entities
 
         private static bool Equals(Role left, Role right)
         {
-            if (ReferenceEquals(null, left) && ReferenceEquals(null, right)) return true;
-            if (ReferenceEquals(null, left) ^ ReferenceEquals(null, right)) return false;
+            if (left is null && right is null) return true;
+            if (left is null ^ right is null) return false;
             return string.Equals(left.Name, right.Name, StringComparison.OrdinalIgnoreCase) && left.PayRate == right.PayRate;
         }
 

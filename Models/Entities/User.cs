@@ -86,8 +86,8 @@ namespace PFSoftware.TimeClock.Models.Entities
         {
             get
             {
-                List<Shift> shifts = new List<Shift>(Shifts.Where(shift => shift.ShiftStart > DateTime.Today).ToList());
-                return shifts.Count > 0 ? new TimeSpan(shifts.Sum(shift => shift.ShiftLength.Ticks)) : LoggedIn ? DateTime.Now - GetMostRecentShift().ShiftStart : new TimeSpan();
+                List<Shift> shifts = new List<Shift>(Shifts.Where(shift => shift.StartTimeUtc > DateTime.Today).ToList());
+                return shifts.Count > 0 ? new TimeSpan(shifts.Sum(shift => shift.Length.Ticks)) : LoggedIn ? DateTime.Now - GetMostRecentShift().StartTimeUtc : new TimeSpan();
             }
         }
 
@@ -104,8 +104,8 @@ namespace PFSoftware.TimeClock.Models.Entities
         {
             get
             {
-                List<Shift> shifts = new List<Shift>(Shifts.Where(shift => shift.ShiftStart >= DateTime.Now.StartOfWeek(DayOfWeek.Sunday)).ToList());
-                return shifts.Count > 0 ? new TimeSpan(shifts.Sum(shift => shift.ShiftLength.Ticks)) : LoggedIn ? DateTime.Now - GetMostRecentShift().ShiftStart : new TimeSpan();
+                List<Shift> shifts = new List<Shift>(Shifts.Where(shift => shift.StartTimeUtc >= DateTime.Now.StartOfWeek(DayOfWeek.Sunday)).ToList());
+                return shifts.Count > 0 ? new TimeSpan(shifts.Sum(shift => shift.Length.Ticks)) : LoggedIn ? DateTime.Now - GetMostRecentShift().StartTimeUtc : new TimeSpan();
             }
         }
 
@@ -152,7 +152,7 @@ namespace PFSoftware.TimeClock.Models.Entities
         private void UpdateShifts()
         {
             if (Shifts.Any())
-                _shifts = Shifts.OrderByDescending(shift => shift.ShiftStart).ToList();
+                _shifts = Shifts.OrderByDescending(shift => shift.StartTimeUtc).ToList();
             UpdateBindings();
         }
 
@@ -190,7 +190,7 @@ namespace PFSoftware.TimeClock.Models.Entities
         {
             if (_roles.Count > 0)
                 _roles = _roles.OrderBy(role => role).ToList();
-            NotifyPropertyChanged("Roles");
+            NotifyPropertyChanged(nameof(Roles));
         }
 
         #endregion Role Manipulation
@@ -198,21 +198,21 @@ namespace PFSoftware.TimeClock.Models.Entities
         /// <summary>Updates bindings.</summary>
         internal void UpdateBindings()
         {
-            NotifyPropertyChanged("Shifts");
-            NotifyPropertyChanged("TotalHoursToday");
-            NotifyPropertyChanged("TotalHoursTodayToString");
-            NotifyPropertyChanged("TotalHoursTodayToStringWithText");
-            NotifyPropertyChanged("ThisWeekTotalHours");
-            NotifyPropertyChanged("ThisWeekTotalHoursToString");
-            NotifyPropertyChanged("ThisWeekTotalHoursToStringWithText");
+            NotifyPropertyChanged(nameof(Shifts));
+            NotifyPropertyChanged(nameof(TotalHoursToday));
+            NotifyPropertyChanged(nameof(TotalHoursTodayToString));
+            NotifyPropertyChanged(nameof(TotalHoursTodayToStringWithText));
+            NotifyPropertyChanged(nameof(ThisWeekTotalHours));
+            NotifyPropertyChanged(nameof(ThisWeekTotalHoursToString));
+            NotifyPropertyChanged(nameof(ThisWeekTotalHoursToStringWithText));
         }
 
         #region Override Operators
 
         private static bool Equals(User left, User right)
         {
-            if (ReferenceEquals(null, left) && ReferenceEquals(null, right)) return true;
-            if (ReferenceEquals(null, left) ^ ReferenceEquals(null, right)) return false;
+            if (left is null && right is null) return true;
+            if (left is null ^ right is null) return false;
             return left.ID == right.ID
                 && string.Equals(left.Username, right.Username, StringComparison.OrdinalIgnoreCase)
                 && string.Equals(left.FirstName, right.FirstName, StringComparison.OrdinalIgnoreCase)

@@ -41,8 +41,8 @@ namespace PFSoftware.TimeClock.Views.Users
             }
             else
             {
-                Shift currentShift = new Shift(AppState.CurrentUser.GetMostRecentShift()) { ShiftEnd = DateTime.Now };
-                if (currentShift.ShiftLength > new TimeSpan(0, 0, 1) && await AppState.LogOut(currentShift).ConfigureAwait(false))
+                Shift currentShift = new Shift(AppState.CurrentUser.GetMostRecentShift()) { EndTimeUtc = DateTime.Now };
+                if (currentShift.Length > new TimeSpan(0, 0, 1) && await AppState.LogOut(currentShift).ConfigureAwait(false))
                 {
                     AppState.CurrentUser.ModifyShift(AppState.CurrentUser.GetMostRecentShift(), currentShift);
                     AppState.CurrentUser.LoggedIn = false;
@@ -54,12 +54,12 @@ namespace PFSoftware.TimeClock.Views.Users
             foreach (Shift shift in allShifts)
             {
                 DateTime startOfWeek = DateTime.Now.StartOfWeek(DayOfWeek.Sunday);
-                if (shift.ShiftStart >= startOfWeek)
+                if (shift.StartTimeUtc >= startOfWeek)
                 {
-                    total.Add(shift.ShiftLength);
+                    total.Add(shift.Length);
                 }
             }
-            TimeSpan ts = new TimeSpan(allShifts.Where(shift => shift.ShiftStart >= DateTime.Now.StartOfWeek(DayOfWeek.Sunday)).ToList().Sum(shift => shift.ShiftLength.Ticks));
+            TimeSpan ts = new TimeSpan(allShifts.Where(shift => shift.StartTimeUtc >= DateTime.Now.StartOfWeek(DayOfWeek.Sunday)).ToList().Sum(shift => shift.Length.Ticks));
             Dispatcher.Invoke(() =>
             {
                 BtnInOut.IsEnabled = true;

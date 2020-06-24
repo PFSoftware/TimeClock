@@ -101,8 +101,8 @@ namespace PFSoftware.TimeClock.Models.Database
             SQLiteCommand cmd = new SQLiteCommand { CommandText = "INSERT INTO Times([ID],[Role],[TimeIn],[TimeOut],[Edited])VALUES(@id,@role,@timeIn,@timeOut,@edited); UPDATE Users SET [LoggedIn] = @loggedIn WHERE [ID] = @id" };
             cmd.Parameters.AddWithValue("@id", newShift.ID);
             cmd.Parameters.AddWithValue("@role", newShift.Role);
-            cmd.Parameters.AddWithValue("@timeIn", newShift.ShiftStartToString);
-            cmd.Parameters.AddWithValue("@timeOut", newShift.ShiftEndToString);
+            cmd.Parameters.AddWithValue("@timeIn", newShift.StartTimeUtcToString);
+            cmd.Parameters.AddWithValue("@timeOut", newShift.EndTimeUtcToString);
             cmd.Parameters.AddWithValue("@edited", newShift.Edited);
             cmd.Parameters.AddWithValue("@loggedIn", AppState.CurrentUser.LoggedIn);
 
@@ -119,11 +119,11 @@ namespace PFSoftware.TimeClock.Models.Database
                 CommandText = "UPDATE Times SET [Role] = @role, [TimeIn] = @timeIn, [TimeOut] = @timeOut, [Edited] = @edited WHERE [ID] = @id AND [TimeIn] = @oldTimeIn"
             };
             cmd.Parameters.AddWithValue("@role", newShift.Role);
-            cmd.Parameters.AddWithValue("@timeIn", newShift.ShiftStartToString);
-            cmd.Parameters.AddWithValue("@timeOut", newShift.ShiftEndToString);
+            cmd.Parameters.AddWithValue("@timeIn", newShift.StartTimeUtcToString);
+            cmd.Parameters.AddWithValue("@timeOut", newShift.EndTimeUtcToString);
             cmd.Parameters.AddWithValue("@edited", newShift.Edited);
             cmd.Parameters.AddWithValue("@id", AppState.CurrentUser.ID);
-            cmd.Parameters.AddWithValue("@oldTimeIn", oldShift.ShiftStartToString);
+            cmd.Parameters.AddWithValue("@oldTimeIn", oldShift.StartTimeUtcToString);
 
             return await SQLiteHelper.ExecuteCommand(_con, cmd).ConfigureAwait(false);
         }
@@ -215,7 +215,7 @@ namespace PFSoftware.TimeClock.Models.Database
                 userShifts.AddRange(from DataRow dr in ds.Tables[0].Rows select new Shift(userID, dr["Role"].ToString(), DateTimeHelper.Parse(dr["TimeIn"]), DateTimeHelper.Parse(dr["TimeOut"]), BoolHelper.Parse(dr["Edited"])));
             }
 
-            return userShifts.OrderByDescending(shift => shift.ShiftStart).ToList();
+            return userShifts.OrderByDescending(shift => shift.StartTimeUtc).ToList();
         }
 
         /// <summary>Assigns a <see cref="User"/> based on a DataRow.</summary>
@@ -265,7 +265,7 @@ namespace PFSoftware.TimeClock.Models.Database
             SQLiteCommand cmd = new SQLiteCommand { CommandText = "INSERT INTO Times([ID],[Role],[TimeIn],[Edited])VALUES(@id,@role,@timeIn,@edited); UPDATE Users SET [LoggedIn] = @loggedIn WHERE [ID] = @id" };
             cmd.Parameters.AddWithValue("@id", loginShift.ID);
             cmd.Parameters.AddWithValue("@role", loginShift.Role);
-            cmd.Parameters.AddWithValue("@timeIn", loginShift.ShiftStartToString);
+            cmd.Parameters.AddWithValue("@timeIn", loginShift.StartTimeUtcToString);
             cmd.Parameters.AddWithValue("@edited", 0);
             cmd.Parameters.AddWithValue("@loggedIn", 1);
 
@@ -282,8 +282,8 @@ namespace PFSoftware.TimeClock.Models.Database
                 CommandText = "UPDATE Times SET [TimeOut] = @timeOut WHERE [TimeIn] = @timeIn; UPDATE Users SET [LoggedIn] = @loggedIn WHERE [ID] = @id"
             };
 
-            cmd.Parameters.AddWithValue("@timeOut", logOutShift.ShiftEndToString);
-            cmd.Parameters.AddWithValue("@timeIn", logOutShift.ShiftStartToString);
+            cmd.Parameters.AddWithValue("@timeOut", logOutShift.EndTimeUtcToString);
+            cmd.Parameters.AddWithValue("@timeIn", logOutShift.StartTimeUtcToString);
             cmd.Parameters.AddWithValue("@loggedIn", 0);
             cmd.Parameters.AddWithValue("@id", logOutShift.ID);
             return await SQLiteHelper.ExecuteCommand(_con, cmd).ConfigureAwait(false);
@@ -322,7 +322,7 @@ namespace PFSoftware.TimeClock.Models.Database
                 foreach (Shift shift in user.Shifts)
                 {
                     await InsertAudit("Admin", "Delete Shift",
-                        $"Logged in: {shift.ShiftStartToString}, Logged out: {shift.ShiftEndToString}", "[Deleted]").ConfigureAwait(false);
+                        $"Logged in: {shift.StartTimeUtcToString}, Logged out: {shift.EndTimeUtcToString}", "[Deleted]").ConfigureAwait(false);
                 }
                 cmd.CommandText += ";DELETE FROM Times WHERE [ID] = @id";
             }
