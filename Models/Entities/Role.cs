@@ -35,7 +35,7 @@ namespace TimeClock.Models.Entities
             }
         }
 
-        /// <summary>The rate at which the <see cref="Role"/> is paid.</summary>
+        /// <summary>The frequency at which the <see cref="Role"/> is paid.</summary>
         internal PayPeriod PayPeriod
         {
             get => _payPeriod; set

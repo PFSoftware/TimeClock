@@ -66,7 +66,7 @@ namespace PFSoftware.TimeClock.Views.Admin
 
         private async void BtnModifyRole_Click(object sender, RoutedEventArgs e)
         {
-            string originalRole = LstRoles.SelectedItem.ToString();
+            Role originalRole = new Role(LstRoles.SelectedItem.ToString();
             string modifyRole = AppState.InputDialog("What role would you like to change this name to be?", "Time Clock", originalRole);
             if (modifyRole.Length > 0 && modifyRole != originalRole)
             {
